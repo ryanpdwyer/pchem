@@ -6,7 +6,9 @@ import ace
 
 st.title("Physical Chemistry Helpers")
 
-apps = {"Combine CSV": combineCSV, 'ACE Editor': ace}
+apps = {"Combine CSV": combineCSV, 
+# 'ACE Editor': ace
+}
 
 app = st.selectbox("Choose an application:", list(apps.keys()))
 
