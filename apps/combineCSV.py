@@ -7,6 +7,9 @@ import io
 import base64
 
 
+def find(val, array):
+    return np.argmin(abs(array - val))
+
 def write_excel(df, filename, label="Download Excel file"):
     towrite = io.BytesIO()
     downloaded_file = df.to_excel(towrite, encoding='utf-8', index=False, header=True)
@@ -22,6 +25,12 @@ def process_file(f):
         data = pd.read_csv(f)
     elif f.name.endswith("xlsx") or f.name.endswith("xls"):
         data = pd.read_excel(f)
+    elif f.name.endswith("Absorbance"):
+        raw_data = np.loadtxt(f, skiprows=19, max_rows=2048)
+        data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])
+    elif f.name.endswith("Transmittance"):
+        raw_data = np.loadtxt(f, skiprows=19, max_rows=2048 )
+        data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Transmittance"])
     else:
         raise NotImplementedError(f"Data loading not supported for file {f.name}")
     return data
@@ -64,7 +73,7 @@ into a single Excel file for easy plotting and anaysis.
         data = [process_file(f) for f in files]
 
         ind_fname = st.selectbox("Choose data to display: ", filenames,
-            format_func=lambda x: x[1])
+            format_func=lambda x: x[1], index=0)
 
         if ind_fname:
             df = data[ind_fname[0]]
@@ -73,19 +82,24 @@ into a single Excel file for easy plotting and anaysis.
         with st.form("column_chooser_and_run"):
             x_column = st.selectbox("Choose the x column: ", cols)
             y_column = st.selectbox("Choose y column: ", cols)
-
+            
 
             submitted = st.form_submit_button()
             if submitted:
                 combined_data = combine_spectra(data, filenames, x_column, y_column)
                 x_data = combined_data[x_column].values
+                x_min_val = st.selectbox("Choose minimum x:", x_data, index=0 )
+                i_min = find(x_min_val, x_data)
+                x_max_val = st.selectbox("Choose maximum x:", x_data, index=len(x_data)-1 )
+                i_max = find(x_max_val, x_data)
                 processing_options = ['None', "Normalized", "Relative"]
                 processing = st.selectbox("Processing?", processing_options)
-
+                combined_data = combined_data.iloc[i_min:i_max, :]
+                x_data = x_data[i_min: i_max]
                 normalize_wavelength = st.selectbox("Normalize data at: ", x_data)
 
                 if processing == "Normalized":
-                    norm_ind = np.argmin(abs(x_data - normalize_wavelength))
+                    norm_ind = find(normalize_wavelength, x_data)
                     y_data = combined_data.values[:, 1:]
                     combined_data.values[:, 1:] = y_data / y_data[norm_ind]
                 
