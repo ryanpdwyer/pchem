@@ -1,5 +1,4 @@
 
-from re import sub
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -124,19 +123,16 @@ into a single Excel file for easy plotting and anaysis.
     
         with st.form("column_chooser_and_run"):
             x_column = st.selectbox("Choose the x column: ", cols)
-            y_column = st.selectbox("Choose y column: ", cols)
+            y_column = st.selectbox("Choose y column: ", cols, index=len(cols)-1)
             
+            same_x = st.checkbox("Same x axis?", value=True)
 
             submitted = st.form_submit_button()
 
         
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
         if st.session_state.ever_submitted:
-            combined_data = combine_spectra(data, filenames, x_column, y_column)
-        
-                
-
-                
+            combined_data = combine_spectra(data, filenames, x_column, y_column, same_x)
                 
         if combined_data is not None:
             combined_data, settings = limit_x_values(combined_data, x_column, settings)
@@ -167,9 +163,6 @@ into a single Excel file for easy plotting and anaysis.
             st.write(combined_data)
             filename = st.text_input("Filename:", value="data")
             write_excel(combined_data, filename)
-
-
-
 
 if __name__ == "__main__":
     run()

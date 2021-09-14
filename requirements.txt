@@ -2,5 +2,5 @@ matplotlib==3.3.4
 numpy==1.19.2
 streamlit==0.86.0
 pandas==1.2.4
-openpyxl==3.0.7
+openpyxl==3.0.8
 streamlit-ace==0.1.0
