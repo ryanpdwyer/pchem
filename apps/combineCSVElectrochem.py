@@ -55,10 +55,17 @@ for easy plotting.
         ind_fname = st.selectbox("Choose data to display: ", filenames,
             format_func=lambda x: x[1], index=0)
 
+        st.write("""## Labels
+Use the boxes below to change the labels for each line that will go on the graph.
+        """)
+        labels = [st.text_input(f"{filename[0]}. {filename[1]}", value=filename[1]) for filename in filenames]
+        
         if ind_fname:
             df = data[ind_fname[0]]
             cols = list(df.columns)
     
+
+        st.write("## Choose columns")
         with st.form("column_chooser_and_run"):
             x_column = st.selectbox("Choose the x column: ", cols)
             y_column = st.selectbox("Choose y column: ", cols, index=len(cols)-1)
@@ -76,8 +83,8 @@ for easy plotting.
             # x_data = combined_data[x_column].values
             # Plotting
             fig, ax = plt.subplots()
-            for df, fname in zip(data, filenames):
-                ax.plot(df[x_column].values, df[y_column].values, label=str(fname[0])+"-"+fname[1])
+            for df, fname, label in zip(data, filenames, labels):
+                ax.plot(df[x_column].values, df[y_column].values, label=str(fname[0])+"-"+label)
             
 
             y_label_default = ""
