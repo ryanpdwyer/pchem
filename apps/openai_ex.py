@@ -3,9 +3,12 @@ import openai
 import textwrap
 from copy import copy
 import streamlit as st
+from streamlit_ace import st_ace
 
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
 
 def run():
     st.markdown("""# AI Playground
@@ -35,11 +38,16 @@ prompt="The following is a conversation with an AI assistant. The assistant is h
 
 
 
-    mode = st.selectbox("Mode:", list(st.session_state.settings.keys()))
+    mode = st.selectbox("Mode:", list(st.session_state.settings.keys()), index=1)
 
     with st.form(key="my_form"):
-        prompt = st.text_area(label="Prompt", height=400,
+        if mode == "AI Chatbot":
+            prompt = st.text_area(label="Prompt", height=400,
     value=st.session_state.settings[mode]["prompt"])
+        else:
+            st.markdown("Code")
+            prompt = st_ace(value=st.session_state.settings[mode]["prompt"],
+            language="python", auto_update=True)
         submit_button = st.form_submit_button()
 
 
