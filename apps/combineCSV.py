@@ -140,11 +140,14 @@ Use the boxes below to change the labels for each line that will go on the graph
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
         if st.session_state.ever_submitted:
             combined_data = combine_spectra(data, filenames, x_column, y_column, same_x)
-                
+
+        use_plotly = st.checkbox("Use plotly?", value=False)
+
         if combined_data is not None:
             combined_data, settings = limit_x_values(combined_data, x_column, settings)
             combined_data, settings = normalize_data(combined_data, x_column, settings)
             x_data = combined_data[x_column].values
+
             # Plotting
             fig, ax = plt.subplots()
             for col, fname in zip(combined_data.values[:, 1:].T, filenames):
