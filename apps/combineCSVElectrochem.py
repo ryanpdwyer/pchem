@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 import io
 import base64
@@ -18,6 +20,19 @@ def limit_x_values(data, x_column, settings):
     for df in data:
         mask = (df[x_column].values > x_min) * (df[x_column].values < x_max)
         data_out.append(df[mask])
+    return data_out, settings
+
+scales = {'A': 1, 'mA': 1e3, 'µA': 1e6}
+
+def scale_current(data, y_column, settings):
+    st.markdown("### Scale Current")
+    scale = st.selectbox("Scale:", list(scales.keys()), index=1)
+    settings['y_scale'] = scale
+    data_out = []
+    for df in data:
+        df2 = df.copy()
+        df2[y_column] = df2[y_column] * scales[scale]
+        data_out.append(df2)
     return data_out, settings
 
 
@@ -75,35 +90,46 @@ Use the boxes below to change the labels for each line that will go on the graph
         
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
 
-                
+        use_plotly = st.checkbox("Use plotly?", value=False)
+
         if data is not None:
 
             data, settings = limit_x_values(data, x_column, settings)
+            data, settings = scale_current(data, y_column, settings)
+
             # data, settings = normalize_data(data, x_column, settings)
             # x_data = combined_data[x_column].values
             # Plotting
-            fig, ax = plt.subplots()
+            if use_plotly:
+                fig = go.Figure()
+            else:
+                fig, ax = plt.subplots()
             for df, fname, label in zip(data, filenames, labels):
-                ax.plot(df[x_column].values, df[y_column].values, label=str(fname[0])+"-"+label)
+                if use_plotly:
+                    fig.add_trace(go.Line(x=df[x_column], y=df[y_column], name=str(fname[0])+"-"+label))
+                else:
+                    ax.plot(df[x_column].values, df[y_column].values, label=str(fname[0])+"-"+label)
             
 
-            y_label_default = ""
-            if settings['processing'] != 'None':
-                y_label_default += settings['processing']+" "
-            y_label_default+=y_column
+            y_label_default = f"{y_column} ({settings['y_scale']})"
 
 
             st.markdown("### Plotting options")    
             x_label = st.text_input("x-axis label: ", value=x_column)
             y_label = st.text_input('y-axis label: ', value=y_label_default)
             grid = st.checkbox("Grid?", value=False)
-            if grid:
+
+            if grid and not use_plotly:
                 ax.grid()
 
-            ax.set_xlabel(x_label)
-            ax.set_ylabel(y_label)
-            ax.legend()
-            st.pyplot(fig)
+            if use_plotly:
+                fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+                st.plotly_chart(fig)
+            else:
+                ax.set_xlabel(x_label)
+                ax.set_ylabel(y_label)
+                ax.legend()
+                st.pyplot(fig)
 
             # # Saving
             # st.markdown("### Output options")

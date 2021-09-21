@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
 import streamlit as st
 import io
 import base64
@@ -148,12 +149,6 @@ Use the boxes below to change the labels for each line that will go on the graph
             combined_data, settings = normalize_data(combined_data, x_column, settings)
             x_data = combined_data[x_column].values
 
-            # Plotting
-            fig, ax = plt.subplots()
-            for col, fname in zip(combined_data.values[:, 1:].T, filenames):
-                ax.plot(x_data, col, label=str(fname[0])+"-"+fname[1])
-            
-
             y_label_default = ""
             if settings['processing'] != 'None':
                 y_label_default += settings['processing']+" "
@@ -163,10 +158,24 @@ Use the boxes below to change the labels for each line that will go on the graph
             st.markdown("### Plotting options")    
             x_label = st.text_input("x-axis label: ", value=x_column)
             y_label = st.text_input('y-axis label: ', value=y_label_default)
-            ax.set_xlabel(x_label)
-            ax.set_ylabel(y_label)
-            ax.legend()
-            st.pyplot(fig)
+
+            # Plotting
+            if use_plotly:
+                plotly_fig = px.line(combined_data, x=x_column, y=combined_data.columns[1:],
+                        labels={'value': y_label, x_column: x_label})
+                st.plotly_chart(plotly_fig)
+            else:
+                fig, ax = plt.subplots()
+                for col, fname in zip(combined_data.values[:, 1:].T, filenames):
+                    ax.plot(x_data, col, label=str(fname[0])+"-"+fname[1])
+                ax.set_xlabel(x_label)
+                ax.set_ylabel(y_label)
+                ax.legend()
+                st.pyplot(fig)
+            
+
+            
+
 
             # Saving
             st.markdown("### Output options")
