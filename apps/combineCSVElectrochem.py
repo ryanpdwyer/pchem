@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import io
 import base64
-from combineCSV import process_file
+from util import process_file
 
 
 def limit_x_values(data, x_column, settings):
