@@ -2,7 +2,7 @@ matplotlib==3.4.3
 numpy==1.21.2
 streamlit==0.88.0
 pandas==1.2.4
-openpyxl==3.0.8
+openpyxl==3.0.9
 streamlit-ace==0.1.0
 openai==0.10.4
 plotly==5.3.1
