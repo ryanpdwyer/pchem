@@ -1,17 +1,19 @@
+import copy
+import time
 from os import write
+
+import matplotlib as mpl
+import matplotlib.lines as lines
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import streamlit as st
 from matplotlib.patches import Rectangle
 from numpy.lib.function_base import interp
 from numpy.lib.npyio import save
-import streamlit as st
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import matplotlib.patches as patches
-import matplotlib.lines as lines
-import numpy as np
-import time
-import copy
 from scipy import interpolate
-import pandas as pd
+
 from util import write_excel
 
 # {{InterpretationBox[
@@ -203,17 +205,17 @@ def draw(current, container):
     shapes = [
     rect((0.4,-0.13),(0.6,0.01), fc="1", ec="0", linewidth=1),
     *container_dict[container],
-    patches.Rectangle((0.36,0.15), 0.64-0.36, 0.08, fc="#ad8764"),
+    patches.Rectangle((0.36,0.15), 0.64-0.36, 0.08, fc="#835828", linewidth=0.5, ec="0"),
     arrow(150-current*(120)/5),
     ]
 
     for shape in shapes:
         ax.add_patch(shape)
     
-    ax.add_line(lines.Line2D([0.40, 0.36, 0.36], [-0.05, -0.05, 0.18], color="0", linewidth=0.75))
-    ax.add_line(lines.Line2D([0.60, 0.64, 0.64], [-0.05, -0.05, 0.18], color="0", linewidth=0.75))
-    ax.text(0.56, -0.04, "A", fontdict=dict(size=10))
-
+    ax.add_line(lines.Line2D([0.40, 0.35, 0.35, 0.358], [-0.05, -0.05, 0.18, 0.18], color="0", linewidth=0.75))
+    ax.add_line(lines.Line2D([0.60, 0.65, 0.65, 0.642], [-0.05, -0.05, 0.18, 0.18], color="0", linewidth=0.75))
+    ax.text(0.43, -0.185, "Current", fontdict=dict(size=8))
+    ax.text(0.47, 0.17, "1 Ω", fontdict=dict(size=8, color='1'))
     ax.set_xlim(0, 1)
     ax.set_ylim(-0.2, 1)
     # ax.set_aspect('equal')
@@ -233,7 +235,15 @@ dt = 2.0
 def run():
     data_default = dict(t=[0], Tsys=[20.0],work=[0])
 
-    st.markdown("# First Law of Thermodynamics")
+    st.markdown("""# First Law of Thermodynamics
+
+This interactive lets you explore the first law of thermodynamics for a system
+consisting of 1 mol of water at a constant pressure of 1 atm. The sliders let you 
+
+- Control the temperature of the system ($T_\\text{sys}$) and surroundings ($T_\\text{surr}$).
+- Do work on the system by controlling the current (0 to 5 A) through a 1 Ω resistor.
+- Choose the walls of the container; note that the dewar has perfectly adiabatic walls.
+""")
 
     if 'running' not in st.session_state:
         st.session_state.running = False
@@ -251,15 +261,10 @@ def run():
         st.session_state.data = copy.copy(data_default)
     
 
-
     Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=100.0, min_value=0.0, step=0.1)
     Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=20.0, max_value=100.0, min_value=0.0, step=0.1)
     current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.01)
     container = st.sidebar.selectbox("System walls:", containers_list)
-
-
-    
-
     
     st.session_state.container = containers[container]
 
