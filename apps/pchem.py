@@ -9,7 +9,7 @@ import openai_ex
 
 st.title("Physical Chemistry Helpers")
 
-apps = {"Combine CSV": combineCSV, 
+apps = {"Combine UV-Vis Data": combineCSV, 
         "Combine CSV Electrochem": combineCSVElectrochem,
         "1st Law of Thermodynamics": thermoFirstLaw,
         "AI Demo": openai_ex

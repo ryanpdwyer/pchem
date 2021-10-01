@@ -72,10 +72,10 @@ def run():
     if 'ever_submitted' not in st.session_state:
         st.session_state.ever_submitted = False
     settings = {}
-    st.markdown("""## Combine CSV files
+    st.markdown("""## Combine UV-Vis files
 
-This helper will combine multiple CSV files (or Excel spreadsheets)
-into a single Excel file for easy plotting and anaysis.
+This helper will combine multiple UV-Vis files (in CSV, Excel, or Ocean Optics .Absorbance format),
+plot the spectra, and output a single Excel file for easy plotting and anaysis.
 
     """)
 
