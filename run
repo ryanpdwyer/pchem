@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-streamlit run apps/pchem.py
+streamlit run apps/pchemapp.py

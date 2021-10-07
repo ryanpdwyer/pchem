@@ -1,5 +1,7 @@
 mkdir -p ~/.streamlit/
 
+python setup.py install
+
 echo "\
 [general]\n\
 email = \"ryanpdwyer@gmail.com\"\n\
