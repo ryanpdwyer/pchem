@@ -1,3 +1,6 @@
 # P Chem
 
-Helpers for physical chemistry.
+
+Helpers for physical chemistry lecture, lab, and research.
+
+
