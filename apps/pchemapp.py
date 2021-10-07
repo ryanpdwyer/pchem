@@ -12,6 +12,7 @@ st.title("Physical Chemistry Helpers")
 apps = {"Combine UV-Vis Data": combineCSV, 
         "Combine CSV Electrochem": combineCSVElectrochem,
         "1st Law of Thermodynamics": thermoFirstLaw,
+        "Sympy Shell": ace,
         "AI Demo": openai_ex
 # 'ACE Editor': ace
 }
