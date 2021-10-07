@@ -7,3 +7,4 @@ streamlit-ace==0.1.0
 openai==0.10.4
 plotly==5.3.1
 scipy==1.7.1
+sympy==1.8
