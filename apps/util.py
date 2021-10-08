@@ -4,6 +4,23 @@ import base64
 import pandas as pd
 import numpy as np
 import io
+import tempfile
+
+
+
+
+# def create_file( suffix='.png'):
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmpfile:
+#         fig.savefig(tmpfile.name, format="png", dpi=300)
+#     return tmpfile
+
+
+# def download_figure(label, fig, default_filename, suffix='.png'):
+#     filename = st.text_input("Filename:", default_filename)
+#     download_figure = st.download_button(label, filename=filename+suffix,)
+
+
+
 
 def process_file(f):
     data = None

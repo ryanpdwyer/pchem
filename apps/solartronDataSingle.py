@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import io
 import base64
+from util import download_figure
 
 
 def process_file(f):
@@ -19,9 +20,9 @@ def process_file(f):
         for key, val in data_in.items():
             try:
                 df = pd.DataFrame(data=val['data'],
-                columns=["Potential (V)", "Current (A)", "col1", "col2", "Time (s)"])
-                df['Current (mA)'] = df['Current (A)'] * 1e3
-                df['Current (nA)'] = df['Current (A)'] * 1e9
+                columns=["Potential (V)", "Current", "col1", "col2", "Time (s)"])
+                # df['Current (mA)'] = df['Current (A)'] * 1e3
+                # df['Current (nA)'] = df['Current (A)'] * 1e9
                 val['data'] = df
                 data[key] = val
             except ValueError:
@@ -43,7 +44,7 @@ def limit_x_values(data, x_column, settings):
         data_out.append(df[mask])
     return data_out, settings
 
-scales = {'A': 1, 'mA': 1e3, 'µA': 1e6}
+scales = {'A': 1, 'mA': 1e3, 'µA': 1e6, 'nA': 1e9}
 
 def scale_current(data, y_column, settings):
     st.markdown("### Scale Current")
@@ -74,7 +75,7 @@ def run():
     st.markdown("""## Combine Solarton Electrochemistry files
 
 This helper will allow json files from the Solartron Potentiostat to be combined and plotted.
-
+In this version, each file must be loaded separately.
     """)
 
     file = st.file_uploader("Upload JSON files",
@@ -85,8 +86,14 @@ This helper will allow json files from the Solartron Potentiostat to be combined
         st.write(file)
 
         data_and_params = process_file(file)
-
-        expts = st.multiselect(f"Select Experiments to Plot", list(data_and_params.keys()))
+        keys = list(data_and_params.keys())
+        
+        def format_func(key):
+            experiment = data_and_params[key]['params']['experiment']
+            return f"{key} - {experiment}"
+        
+        # Right now, OCP experiments are not saved (sloppy).
+        expts = st.multiselect(f"Select Experiments to Plot", keys, format_func=format_func)
         
         data_matching = {key: val for key, val in data_and_params.items() if key in expts}
 
@@ -94,9 +101,9 @@ This helper will allow json files from the Solartron Potentiostat to be combined
 
         data_matching = {key: val['data'] for key, val in data_matching.items()}
 
-        for key, val in data_matching.items():
-            st.write(key)
-            st.write(val)
+        # for key, val in data_matching.items():
+        #     st.write(key)
+        #     st.write(val)
 
 #         st.write("""## Labels
 # Use the boxes below to change the labels for each line that will go on the graph.
@@ -123,14 +130,14 @@ This helper will allow json files from the Solartron Potentiostat to be combined
         
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
 
-        use_plotly = st.checkbox("Use plotly?", value=False)
+        use_plotly = st.checkbox("Use plotly?", value=True)
 
 
         data = list(data_matching.values())
         
         if data is not None and len(data) > 0:
 
-            data, settings = limit_x_values(data, x_column, settings)
+            # data, settings = limit_x_values(data, x_column, settings)
             data, settings = scale_current(data, y_column, settings)
 
             # data, settings = normalize_data(data, x_column, settings)
@@ -166,6 +173,7 @@ This helper will allow json files from the Solartron Potentiostat to be combined
                 ax.set_ylabel(y_label)
                 ax.legend()
                 st.pyplot(fig)
+                # download_figure("Download Figure", fig, "CV")
 
             # # Saving
             # st.markdown("### Output options")
