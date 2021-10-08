@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import io
 import base64
-from util import download_figure
+# from util import download_figure
 
 
 def process_file(f):
