@@ -8,29 +8,38 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import io
+from copy import copy
 import base64
-# from util import download_figure
+from util import write_excel
 
 
-def process_file(f):
+
+def process_file(f, file_number):
     data = None
     if f.name.endswith("json"):
         data_in = json_tricks.loads(f.getvalue().decode("utf-8"))
         data = {}
         for key, val in data_in.items():
-            try:
+            if 'data' in val and len(val['data']) > 0:
                 df = pd.DataFrame(data=val['data'],
                 columns=["Potential (V)", "Current", "col1", "col2", "Time (s)"])
+                df['key'] = int(key)
+                df['file'] = file_number
+                df['exptName'] = val['params']['experiment']
                 # df['Current (mA)'] = df['Current (A)'] * 1e3
                 # df['Current (nA)'] = df['Current (A)'] * 1e9
                 val['data'] = df
                 data[key] = val
-            except ValueError:
-                print(f"Could not load {key}")
+            else:
+                print(f"No data in {key}")
     else:
         raise NotImplementedError(f"Data loading not supported for file {f.name}")
     return data
 
+
+@st.cache
+def process_files(files):
+    return {f"F{i}": process_file(file, i) for i, file in enumerate(files)}
 
 def limit_x_values(data, x_column, settings):
     st.markdown("### Limit x Range")
@@ -68,6 +77,7 @@ def run():
     cols = None
     x_column = y_column = None
     combined_data = None
+    expts = None
     processing="None"
     if 'ever_submitted' not in st.session_state:
         st.session_state.ever_submitted = False
@@ -75,7 +85,6 @@ def run():
     st.markdown("""## Combine Solarton Electrochemistry files
 
 This helper will allow json files from the Solartron Potentiostat to be combined and plotted.
-In this version, each file must be loaded separately.
     """)
 
     files = st.file_uploader("Upload JSON files",
@@ -87,11 +96,12 @@ In this version, each file must be loaded separately.
         st.write(files)
         
         st.markdown("Files are represented below using the abbreviations F0, F1, etc...")
+
         for i, file in enumerate(files):
             st.write(f"F{i}: {file.name}")
         
 
-        data_and_params_separate = {f"F{i}": process_file(file) for i, file in enumerate(files)}
+        data_and_params_separate = process_files(files)
         
         data_and_params = {f"{out_key}-{key}":val for out_key, out_dict in data_and_params_separate.items() 
                                             for key, val in out_dict.items()}
@@ -104,13 +114,17 @@ In this version, each file must be loaded separately.
             return f"{key} - {experiment}"
         
         # Right now, OCP experiments are not saved (sloppy).
+        st.write(data_and_params)
         expts = st.multiselect(f"Select Experiments to Plot", keys, format_func=format_func)
         
+
+    if expts:
+    
         data_matching = {key: val for key, val in data_and_params.items() if key in expts}
 
         params_matching = {key: val['params'] for key, val in data_matching.items()}    
 
-        data_matching = {key: val['data'] for key, val in data_matching.items()}
+        data_matching = {key: copy(val['data']) for key, val in data_matching.items()}
 
 
 
@@ -123,8 +137,7 @@ Use the boxes below to change the labels for each line that will go on the graph
         for key, val in data_matching.items():
             val['expt-key'] = key
             val['expt'] = labels[key]
-        
-        df_all = pd.concat(list(data_matching.values()))
+
 
         # if ind_fname:
         #     df = data[ind_fname[0]]
@@ -138,7 +151,7 @@ Use the boxes below to change the labels for each line that will go on the graph
             df = data_matching[first_expt]
             cols = list(df.columns)
             x_column = st.selectbox("Choose the x column: ", cols)
-            y_column = st.selectbox("Choose y column: ", cols, index=len(cols)-1)
+            y_column = st.selectbox("Choose y column: ", cols, index=1)
 
             submitted = st.form_submit_button()
 
@@ -155,18 +168,21 @@ Use the boxes below to change the labels for each line that will go on the graph
             # data, settings = limit_x_values(data, x_column, settings)
             data, settings = scale_current(data, y_column, settings)
 
-            # data, settings = normalize_data(data, x_column, settings)
-            # x_data = combined_data[x_column].values
-            # Plotting
-            if use_plotly:
-                pass
-            else:
+ 
+
+            df_all = pd.concat(data)
+
+            if not use_plotly:
                 fig, ax = plt.subplots()
-            for df, expt in zip(data, expts):
-                if use_plotly:
-                    fig = px.line(df_all, x=x_column, y=y_column,
-                                    line_group='expt', color='expt', facet_col='expt')
-                else:
+            
+            if use_plotly:
+                facet_col = st.selectbox('Facet columns?', [None, 'expt', 'file'],
+                                                key='facet_col')
+                fig = px.line(df_all, x=x_column, y=y_column,
+                                    line_group='expt', color='expt', 
+                                    facet_col=facet_col)
+            else:
+                for df, expt in zip(data, expts):
                     ax.plot(df[x_column].values, df[y_column].values, label=labels[expt])
             
 
@@ -187,14 +203,15 @@ Use the boxes below to change the labels for each line that will go on the graph
                 ax.set_xlabel(x_label)
                 ax.set_ylabel(y_label)
                 ax.legend()
+
                 st.pyplot(fig)
                 # download_figure("Download Figure", fig, "CV")
 
             # # Saving
-            # st.markdown("### Output options")
-            # st.write(combined_data)
-            # filename = st.text_input("Filename:", value="data")
-            # write_excel(combined_data, filename)
+            st.markdown("### Output options")
+            filename = st.text_input("Filename:", value="data")
+            write_excel(df_all, filename)
+            st.write(df_all)
 
 if __name__ == "__main__":
     run()

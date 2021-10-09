@@ -6,13 +6,13 @@ import combineCSVElectrochem
 import thermoFirstLaw
 import ace
 import openai_ex
-import solartronDataSingle
+import solartronData
 
 st.title("Physical Chemistry Helpers")
 
 apps = {"Combine UV-Vis Data": combineCSV, 
         "Combine CSV Electrochem": combineCSVElectrochem,
-        "Plot Solartron Data": solartronDataSingle,
+        "Plot Solartron Data": solartronData,
         "1st Law of Thermodynamics": thermoFirstLaw,
         "Sympy Shell": ace,
         "AI Demo": openai_ex
