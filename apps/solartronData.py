@@ -78,14 +78,25 @@ This helper will allow json files from the Solartron Potentiostat to be combined
 In this version, each file must be loaded separately.
     """)
 
-    file = st.file_uploader("Upload JSON files",
-                accept_multiple_files=False)
+    files = st.file_uploader("Upload JSON files",
+                accept_multiple_files=True)
 
 
-    if file:
-        st.write(file)
+    if files:
+        
+        st.write(files)
+        
+        st.markdown("Files are represented below using the abbreviations F0, F1, etc...")
+        for i, file in enumerate(files):
+            st.write(f"F{i}: {file.name}")
+        
 
-        data_and_params = process_file(file)
+        data_and_params_separate = {f"F{i}": process_file(file) for i, file in enumerate(files)}
+        
+        data_and_params = {f"{out_key}-{key}":val for out_key, out_dict in data_and_params_separate.items() 
+                                            for key, val in out_dict.items()}
+
+
         keys = list(data_and_params.keys())
         
         def format_func(key):
@@ -101,15 +112,20 @@ In this version, each file must be loaded separately.
 
         data_matching = {key: val['data'] for key, val in data_matching.items()}
 
-        # for key, val in data_matching.items():
-        #     st.write(key)
-        #     st.write(val)
 
-#         st.write("""## Labels
-# Use the boxes below to change the labels for each line that will go on the graph.
-#         """)
-#         labels = [st.text_input(f"{filename[0]}. {filename[1]}", value=filename[1]) for filename in filenames]
+
+        st.write("""## Labels
+Use the boxes below to change the labels for each line that will go on the graph.
+        """)
+        labels = {expt: st.text_input(f"{expt} Label:", value=expt) for expt in expts}
         
+
+        for key, val in data_matching.items():
+            val['expt-key'] = key
+            val['expt'] = labels[key]
+        
+        df_all = pd.concat(list(data_matching.values()))
+
         # if ind_fname:
         #     df = data[ind_fname[0]]
         #     cols = list(df.columns)
@@ -143,14 +159,15 @@ In this version, each file must be loaded separately.
             # x_data = combined_data[x_column].values
             # Plotting
             if use_plotly:
-                fig = go.Figure()
+                pass
             else:
                 fig, ax = plt.subplots()
-            for df, fname in zip(data, expts):
+            for df, expt in zip(data, expts):
                 if use_plotly:
-                    fig.add_trace(go.Line(x=df[x_column], y=df[y_column], name=str(fname)+"-"))
+                    fig = px.line(df_all, x=x_column, y=y_column,
+                                    line_group='expt', color='expt', facet_col='expt')
                 else:
-                    ax.plot(df[x_column].values, df[y_column].values, label=str(fname)+"-")
+                    ax.plot(df[x_column].values, df[y_column].values, label=labels[expt])
             
 
             y_label_default = f"{y_column} ({settings['y_scale']})"
