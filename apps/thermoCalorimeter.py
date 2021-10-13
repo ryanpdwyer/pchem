@@ -188,7 +188,7 @@ def draw(current, container, ice):
     
     return fig, ax
 
-def simulate(Tsys, Tsurr, current, work, ice, water, container):
+def simulate(Tsys, Tsurr, current, work, ice, water, container, dt):
     c = container
     Hfus = 6020 # J/mol
     dW = current**2 * dt
@@ -224,7 +224,7 @@ def simulate(Tsys, Tsurr, current, work, ice, water, container):
     return work, Tsys, ice, water
 
 
-dt = 4.0
+
 
 def run():
     data_default = dict(t=[0], Tsys=[0.0], work=[0], ice=[1.00], water=[0.00])
@@ -259,6 +259,7 @@ of 1 mol of ice initially at 0 °C at $P = 1$ bar. The sliders let you
     Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=0.0, max_value=12.0, min_value=-2.0, step=0.01)
     current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.1)
     container = st.sidebar.selectbox("System walls:", containers_list)
+    dt = st.sidebar.slider("Time step (s):", value=5.0, min_value=1.0, max_value=20.0, step=1.0)
     
     st.session_state.container = containers[container]
 
@@ -292,7 +293,6 @@ of 1 mol of ice initially at 0 °C at $P = 1$ bar. The sliders let you
     ice = st.session_state.data["ice"][-1]
 
 
-
     st.markdown(f"""## Properties
 $T_{{\\text{{sys}}}}$ = {Tsys:.2f} °C,  &nbsp; &nbsp;$T_{{\\text{{surr}}}}$ = {Tsurr:.2f} °C
 
@@ -322,7 +322,7 @@ Ice = {ice:.3f} mol, &nbsp; &nbsp; Water: {water:.3f} mol
     # Needs to be at the bottom
     if st.session_state.running:
         work, Tsys, ice, water = simulate(Tsys, Tsurr, current, work, ice, water,
-                            st.session_state.container)
+                            st.session_state.container, dt)
         st.session_state.data["work"].append(work)
         st.session_state.data["Tsys"].append(Tsys)
         st.session_state.data["ice"].append(ice)
