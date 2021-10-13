@@ -156,7 +156,7 @@ def draw(current, container, ice):
             fc='0.9'), water],
             "Cu in Air": [patches.Rectangle((0.05,0.05), 0.9, 0.9, linewidth=1, ec="0",
             fc='1'), waterCu],
-            "Cu in Water": [patches.Rectangle((0.05,0.05), 0.9, 0.9, linewidth=1, ec="0",
+            "Cu in Saltwater": [patches.Rectangle((0.05,0.05), 0.9, 0.9, linewidth=1, ec="0",
             fc="#d7f1fa"), waterCu]
 
     }
@@ -224,7 +224,7 @@ consisting of 1 mol of ice at a constant pressure of 1 bar. The sliders let you
     if 'running' not in st.session_state:
         st.session_state.running = False
     
-    containers = {"Dewar": 0, "Styrofoam": 0.03, "Cu in Air": 0.3, "Cu in Water": 10}
+    containers = {"Dewar": 0, "Styrofoam": 0.03, "Cu in Air": 0.3, "Cu in Saltwater": 10}
 
     containers_list = list(containers.keys())
 
@@ -237,8 +237,8 @@ consisting of 1 mol of ice at a constant pressure of 1 bar. The sliders let you
         st.session_state.data = copy.copy(data_default)
     
 
-    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=100.0, min_value=0.0, step=0.1)
-    Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=20.0, max_value=100.0, min_value=0.0, step=0.1)
+    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=100.0, min_value=0, step=0.1)
+    Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=0.0, max_value=50.0, min_value=-10.0, step=0.1)
     current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.01)
     container = st.sidebar.selectbox("System walls:", containers_list)
     
