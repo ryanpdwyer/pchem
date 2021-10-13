@@ -232,11 +232,11 @@ def run():
     st.markdown("""# Calorimeter
 
 This interactive lets you explore calorimetry and the second law of thermodynamics for a system
-consisting of 1 mol of ice at a constant pressure of 1 bar. The sliders let you 
+of 1 mol of ice initially at 0 °C at $P = 1$ bar. The sliders let you 
 
-- Control the temperature of the system ($T_\\text{sys}$) and surroundings ($T_\\text{surr}$).
+- Control the temperature of the surroundings ($T_\\text{surr}$).
 - Do work on the system by controlling the current (0 to 5 A) through a 1 Ω resistor.
-- Choose the walls of the container; note that the dewar has perfectly adiabatic walls.
+- Choose the walls of the container. The dewar has adiabatic walls.
 """)
 
     if 'running' not in st.session_state:
@@ -255,9 +255,9 @@ consisting of 1 mol of ice at a constant pressure of 1 bar. The sliders let you
         st.session_state.data = copy.copy(data_default)
     
 
-    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=50.0, min_value=0.0, step=0.1)
-    Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=0.0, max_value=50.0, min_value=-10.0, step=0.1)
-    current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.01)
+    Tsys = float(st.session_state.data["Tsys"][-1])
+    Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=0.0, max_value=12.0, min_value=-2.0, step=0.01)
+    current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.1)
     container = st.sidebar.selectbox("System walls:", containers_list)
     
     st.session_state.container = containers[container]
@@ -297,6 +297,8 @@ consisting of 1 mol of ice at a constant pressure of 1 bar. The sliders let you
 $T_{{\\text{{sys}}}}$ = {Tsys:.2f} °C,  &nbsp; &nbsp;$T_{{\\text{{surr}}}}$ = {Tsurr:.2f} °C
 
 Total work $w$ = {work:.2f} J, &nbsp; &nbsp; Walls: {container}
+
+Ice = {ice:.3f} mol, &nbsp; &nbsp; Water: {water:.3f} mol
     """, unsafe_allow_html=True
         )
 
