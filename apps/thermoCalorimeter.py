@@ -293,7 +293,7 @@ Total work $w$ = {work:.2f} J, &nbsp; &nbsp; Walls: {container}
         df.rename(columns={"work": "work (J)", "Tsys": "Tsys (°C)", "t": "Time (s)", 'ice': 'ice (mol)', 'water': 'water (mol)'}, inplace=True)
         st.write(df)
 
-        filename = st.text_input("Filename:", value="CHE341-1stLaw-data")
+        filename = st.text_input("Filename:", value="CHE341-2ndLaw-data")
         save_excel_button = st.button("Save to Excel")
     
         if save_excel_button:
