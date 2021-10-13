@@ -122,7 +122,7 @@ cP = np.array([
 4.216
 ])
 
-cP_water = interpolate.interp1d(T, cP)
+cP_water = interpolate.interp1d(T, cP, fill_value="extrapolate")
 
 def arrow(angle):
     angle = np.radians(angle)
@@ -138,14 +138,14 @@ def rect(bl, tr, **kwargs):
 def draw(current, container, ice):
     fig, ax = plt.subplots(figsize=(4,4))
     ax.axis('off')
-    
-    if ice > 0:
-        water_color="#f2f3fc"
-    else:
-        water_color = "#d7f1fa"
+
+    ice_color="#f2f3fc"
+    water_color = "#d7f1fa"
     # rect((0.4,-0.13),(0.6,0.01), fc="1", ec="0", linewidth=1)
     water = patches.Rectangle((0.1,0.1), 0.8, 0.8, linewidth=1, ec="0",
             fc=water_color)
+
+
     
     waterCu = patches.Rectangle((0.1,0.1), 0.8, 0.8, linewidth=3, ec="#b87333",
             fc=water_color)
@@ -160,6 +160,13 @@ def draw(current, container, ice):
             fc="#d7f1fa"), waterCu]
 
     }
+
+    if ice > 0: # 1 mol total, so ice height should be 
+        iceHeight = 0.8/1*ice
+        icePatch = patches.Rectangle((0.1,0.9-iceHeight), 0.8, iceHeight, linewidth=0,
+            fc=ice_color)
+        for val in container_dict.values():
+                val.append(icePatch)
 
     shapes = [
     rect((0.4,-0.13),(0.6,0.01), fc="1", ec="0", linewidth=1),
@@ -189,20 +196,31 @@ def simulate(Tsys, Tsurr, current, work, ice, water, container):
     dq = -c*(Tsys-Tsurr)*dt
     dH = dW + dq
     cp = 18.01 * cP_water(Tsys)
-    if ice > 0:
-        if ice < dH/Hfus:
-            dHleft = dH - Hfus
-            water += ice
-            ice = 0
-        else:
-            ice = ice - dH/Hfus
-            water = water + dH/Hfus
-            dHleft = 0
+    dWater = dH/Hfus # New water produced
+    if dWater > 0:
+        dWater = min(dWater, ice)
     else:
-        dHleft = dH
+        dWater = -min(abs(dWater), water)
     
+    dHleft = dH - dWater * Hfus
+    water += dWater
+    ice -= dWater    
 
-    Tsys = Tsys + dHleft/cp
+    dT = dHleft / cp
+    dT = -min(-dT, Tsys)
+    dHleft = dHleft - dT * cp
+    Tsys = Tsys + dT
+
+    if abs(dHleft) > 0.001:
+        dWater = dHleft/Hfus # New water produced
+        if dWater > 0:
+            dWater = min(dWater, ice)
+        else:
+            dWater = -min(abs(dWater), water)
+    
+    dHleft = dHleft - dWater * Hfus
+    water += dWater
+    ice -= dWater
     return work, Tsys, ice, water
 
 
@@ -237,7 +255,7 @@ consisting of 1 mol of ice at a constant pressure of 1 bar. The sliders let you
         st.session_state.data = copy.copy(data_default)
     
 
-    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=100.0, min_value=0, step=0.1)
+    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=50.0, min_value=0.0, step=0.1)
     Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=0.0, max_value=50.0, min_value=-10.0, step=0.1)
     current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.01)
     container = st.sidebar.selectbox("System walls:", containers_list)
