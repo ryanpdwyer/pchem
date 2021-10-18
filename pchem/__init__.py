@@ -1,5 +1,18 @@
-import sympy as sm
+
+
 from copy import copy
+import functools
+import operator
+
+import sympy as sm
+import numpy as np
+import pandas as pd
+
+try:
+    import CoolProp.CoolProp as CP
+except:
+    pass
+
 
 class Solve:
     def __init__(self):
@@ -49,6 +62,51 @@ class Solve:
         return out
 
 solve = Solve() # Instantiate the class...
+
+def getprop(gas, prop, P=1, T=298.15):
+    """For a gas,"""
+    P_Pa = P * 1e5 # bar to Pa
+    if prop == 'Vmolar':
+        return 1000/CP.PropsSI('Dmolar', 'P', P_Pa, 'T', T, gas) # L/mol
+    else:
+        return CP.PropsSI(prop, 'P', P_Pa, 'T', T, gas)
+
+    
+def getPressure(gas, T=300, Vbar=22.4):
+    Z_prev = 1
+    Pguess = (0.083145*T)/Vbar * Z_prev
+    Z_guess = getprop(gas, 'Z', Pguess, T)
+    while abs(Z_guess-Z_prev) > 0.001:
+        Z_prev=Z_guess
+        Pguess = Pguess*Z_guess
+        Z_guess = getprop(gas, 'Z', Pguess, T)
+        
+    return Pguess*Z_guess
+
+
+def flatten(a):
+    return functools.reduce(operator.iconcat, a, [])
+
+
+def getprop_df(gas, prop, P, T):
+    P = np.array(P).reshape(-1)
+    T = np.array(T).reshape(-1)
+    
+    return pd.DataFrame(flatten([[{ 'P': Px, 'T':Tx, prop: getprop(gas, prop, P=Px, T=Tx)} for Px in P] for Tx in T]),
+                      )
+
+def getprops_df(gas, props, P, T):
+    P = np.array(P).reshape(-1)
+    T = np.array(T).reshape(-1)
+    dicts = []
+    for Px in P:
+        for Tx in T:
+            d = dict(T=Tx, P=Px)
+            for prop in props:
+                d[prop] = getprop(gas, prop, P=Px, T=Tx)
+            dicts.append(d)
+    
+    return pd.DataFrame(dicts)
 
 # def solve(equation, variable, subs=None, unwrap=True):
     # """Solve equation for the given variable; if given, a dictionary of subs
