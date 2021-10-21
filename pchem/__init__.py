@@ -84,16 +84,20 @@ def getPressure(gas, T=300, Vbar=22.4):
     return Pguess*Z_guess
 
 
-def flatten(a):
+# From StackOverflow
+def _flatten(a):
     return functools.reduce(operator.iconcat, a, [])
-
 
 def getprop_df(gas, prop, P, T):
     P = np.array(P).reshape(-1)
     T = np.array(T).reshape(-1)
     
-    return pd.DataFrame(flatten([[{ 'P': Px, 'T':Tx, prop: getprop(gas, prop, P=Px, T=Tx)} for Px in P] for Tx in T]),
+    df = pd.DataFrame(_flatten([[{ 'P': Px, 'T':Tx, prop: getprop(gas, prop, P=Px, T=Tx)} for Px in P] for Tx in T]),
                       )
+
+    df['P_str'] = [str(x) for x in df['P'].values]
+    df['T_str'] = [str(x) for x in df['T'].values]
+    return df
 
 def getprops_df(gas, props, P, T):
     P = np.array(P).reshape(-1)
@@ -106,7 +110,10 @@ def getprops_df(gas, props, P, T):
                 d[prop] = getprop(gas, prop, P=Px, T=Tx)
             dicts.append(d)
     
-    return pd.DataFrame(dicts)
+    df = pd.DataFrame(dicts)
+    df['P_str'] = [str(x) for x in df['P'].values]
+    df['T_str'] = [str(x) for x in df['T'].values]
+    return df
 
 # def solve(equation, variable, subs=None, unwrap=True):
     # """Solve equation for the given variable; if given, a dictionary of subs
