@@ -31,7 +31,5 @@ jobs:
     - name: Test with pytest
       run: |
         conda install pytest
-        cd pchem
         pip install .
-        cd ..
         pytest
