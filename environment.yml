@@ -1,6 +1,6 @@
 name: pchem
 channels:
-  - conda-force
+  - conda-forge
   - defaults
 dependencies:
   - matplotlib=3.4.3
