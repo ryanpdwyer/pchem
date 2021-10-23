@@ -12,6 +12,7 @@ dependencies:
   - sympy=1.8
   - json-tricks=3.15.5
   - coolprop=6.4.1
+  - pip
   - pip:
     - openai==0.10.4
     - streamlit==0.88.0
