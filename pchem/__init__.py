@@ -71,6 +71,15 @@ def getprop(gas, prop, P=1, T=298.15):
     else:
         return CP.PropsSI(prop, 'P', P_Pa, 'T', T, gas)
 
+def getprop_dens(gas, prop, density, T=298.15):
+    """For a gas,"""
+    if prop == 'Vmolar':
+        return 1000/CP.PropsSI('Dmolar', 'D', density, 'T', T, gas) # L/mol
+    else:
+        return CP.PropsSI(prop, 'P', P_Pa, 'T', T, gas)
+
+
+
     
 def getPressure(gas, T=300, Vbar=22.4):
     Z_prev = 1
