@@ -76,7 +76,7 @@ def getprop_dens(gas, prop, density, T=298.15):
     if prop == 'Vmolar':
         return 1000/CP.PropsSI('Dmolar', 'D', density, 'T', T, gas) # L/mol
     else:
-        return CP.PropsSI(prop, 'P', P_Pa, 'T', T, gas)
+        return CP.PropsSI(prop, 'D', density, 'T', T, gas)
 
 
 
