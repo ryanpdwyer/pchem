@@ -9,6 +9,7 @@ import ace
 import openai_ex
 import solartronData
 import thermoGas
+import entropySplit
 
 st.title("Physical Chemistry Tools")
 
@@ -18,6 +19,7 @@ apps = {"Combine UV-Vis Data": combineCSV,
         "1st Law of Thermodynamics": thermoFirstLaw,
         "2nd Law Calorimeter": thermoCalorimeter,
         "Mystery Gas": thermoGas,
+        "Where is Equilibrium?": entropySplit,
         "Sympy Shell": ace,
         "AI Demo": openai_ex
 # 'ACE Editor': ace
