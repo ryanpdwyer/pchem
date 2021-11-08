@@ -46,9 +46,6 @@ subs = dict(
 
 solve(gas_law, V, subs)
 
-
-
-print(delta_G_eq)
 # Calculate Delta
 s2 = dict(
     G=0, # Delta_r G at T and Q given below...
