@@ -15,7 +15,7 @@ except:
 
 
 class Solve:
-    def __init__(self):
+    def __init__(self, display=False):
         """Solve equation for the given variable; if given, a dictionary of subs
         (substitutions) can be given. This is useful if you want to solve numerically
         rather than symbolically. 
@@ -35,8 +35,11 @@ class Solve:
             
         """
         self.context = {}
+        self.display = display
 
-    def __call__(self, equation, variable, subs=None, unwrap=True):
+    def __call__(self, equation, variable, subs=None, unwrap=True, display=None):
+        if display is None:
+            display = self.display
         if subs is not None:
             subs_out = {}
             for key, val in subs.items():
@@ -52,13 +55,20 @@ class Solve:
                 subs_out[key_out] = val
             
             subs_out.pop(variable, None)
+            if display:
+                display(equation)
+                display_str = [f"{key} = {val}" for key, val in subs_out.items()]
+                display(" ".join(display_str))
             out = sm.solve(equation.subs(subs_out), variable)
         else:
             out = sm.solve(equation, variable)
         
         if unwrap and len(out) == 1:
             out = out[0]
-
+        
+        if display:
+            display(f"Soln: {variable} =")
+            display(out)
         return out
 
 solve = Solve() # Instantiate the class...

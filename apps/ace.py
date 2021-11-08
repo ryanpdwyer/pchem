@@ -4,7 +4,7 @@ import types
 
 import sympy as sm
 from sympy.abc import *
-from pchem import solve
+import pchem
 # See 
 # https://discuss.streamlit.io/t/take-code-input-from-user/6413/2?u=ryanpdwyer
 
@@ -22,6 +22,8 @@ from pchem import solve
 #     exec(code, module.__dict__)
 #     return module
 
+solve = pchem.Solve(display=st.write)
+
 def run():
     # data = st.file_uploader("Upload data files:", accept_multiple_files=True)
     st.markdown("## Sympy Shell")
@@ -32,16 +34,34 @@ def run():
 # All single letter variables are defined
 
 gas_law = P*V - n * R * T
+delta_G_eq = G - (H - T * (S - R*sm.log(Q)))
 
 subs = dict(
     P=0.2,
     V=2.0,
     n=0.1,
     T=298,
-    R=0.08314
+    R=0.083145
 )
 
-print(solve(gas_law, T))
+solve(gas_law, V, subs)
+
+
+
+print(delta_G_eq)
+# Calculate Delta
+s2 = dict(
+    G=0, # Delta_r G at T and Q given below...
+    H=-20e3, # Delta_r H°
+    S=-50.0, # Delta_r S°
+    R=8.3145, 
+    T=298,
+    Q=1,
+)
+
+print("$Q$ at equilibrium and $T$ = 298 K")
+solve(delta_G_eq, Q, s2)
+
 """)
 
     # m = import_code(content, "aceExampleCode")
