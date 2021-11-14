@@ -74,8 +74,8 @@ def run():
     settings = {}
     st.markdown("""## Combine UV-Vis files
 
-This helper will combine multiple UV-Vis files (in CSV, Excel, or Ocean Optics .Absorbance format),
-plot the spectra, and output a single Excel file for easy plotting and anaysis.
+This helper will combine multiple UV-Vis files (in CSV, Excel, Ocean Optics .Absorbance/.Transmittance, or Shimadzu UVProbe .txt format),
+plot/normalize the spectra, and output a single Excel file for easy plotting and anaysis.
 
     """)
 
