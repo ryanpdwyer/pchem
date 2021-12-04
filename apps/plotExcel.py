@@ -6,10 +6,22 @@ import plotly.express as px
 import streamlit as st
 import io
 import base64
-from util import find, write_excel, process_file
+from util import find, write_excel
+
+def process_file(f):
+    if f.name.endswith("csv"):
+        data = pd.read_csv(f)
+    elif f.name.endswith("xlsx") or f.name.endswith("xls"):
+        data = pd.read_excel(f)
+    
+    x_col = data.columns[0]
+    y_cols = data.columns[1:]
+    datasets = [pd.DataFrame({x_col: data[x_col].values, 'Absorbance': data[y_col].values}) for y_col in y_cols]
+    fnames = [f.name for x in y_cols]
+    return fnames, y_cols, datasets
 
 
-
+    
 def combine_spectra(dataframes, labels, xcol, ycol, tol=1e-6):
     x_data = dataframes[0][xcol].values
     all_data = [x_data]
@@ -65,6 +77,9 @@ def normalize_data(combined_data, x_column, settings):
     
     return combined_data, settings
 
+def filter_inds(array, indices):
+    return [array[i] for i in indices]
+
 def run():
     df = None
     cols = None
@@ -73,10 +88,9 @@ def run():
     if 'ever_submitted' not in st.session_state:
         st.session_state.ever_submitted = False
     settings = {}
-    st.markdown("""## Combine UV-Vis files
+    st.markdown("""## Plot Excel Absorbance data
 
-This helper will combine multiple UV-Vis files (in CSV, Excel, Ocean Optics .Absorbance/.Transmittance, or Shimadzu UVProbe .txt format),
-plot/normalize the spectra, and output a single Excel file for easy plotting and anaysis.
+This helper will combine multiple CSV or Excel files, plot/normalize the spectra, and output a single Excel file for easy plotting and anaysis.
 
     """)
 
@@ -88,34 +102,35 @@ plot/normalize the spectra, and output a single Excel file for easy plotting and
         st.write(files)
 
         filenames = [(i, f.name) for i, f in enumerate(files)]
-        data = [process_file(f) for f in files]
+        all_fnames = []
+        all_data = []
+        all_original_labels = []
+        for f in files:
+            fname, y_cols, datum = process_file(f)
+            all_fnames.extend(fname)
+            all_data.extend(datum)
+            all_original_labels.extend(y_cols)
+        fname_label = [f'{fname} - {label}' for fname, label in zip(all_fnames, all_original_labels)]
+        
 
-        ind_fname = st.selectbox("Choose data to display: ", filenames,
-            format_func=lambda x: x[1], index=0)
+        options = list(range(len(all_fnames)))
+        selected_data = st.multiselect(label="Choose data to plot", options=options,
+            default=options, format_func=lambda i: fname_label[i])
+
+        fnames = filter_inds(all_fnames, selected_data)
+        data = filter_inds(all_data, selected_data)
+        original_labels = filter_inds(all_original_labels, selected_data)
+        
 
         st.write("""## Labels
 Use the boxes below to change the labels for each line that will go on the graph.
         """)
-        labels = [st.text_input(f"{filename[0]}. {filename[1]}", value=str(filename[0])+"-"+filename[1]) for filename in filenames]
+        labels = [st.text_input(f"{fname} - {label}", value=f"{fname} - {label}") for fname, label in zip(fnames, original_labels)]
 
-        if ind_fname:
-            df = data[ind_fname[0]]
-            cols = list(df.columns)
-    
-
-        st.write("## Choose columns")
-        with st.form("column_chooser_and_run"):
-            x_column = st.selectbox("Choose the x column: ", cols)
-            y_column = st.selectbox("Choose y column: ", cols, index=len(cols)-1)
-            
-            same_x = st.checkbox("Same x axis?", value=True)
-
-            submitted = st.form_submit_button()
-
-        
-        st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
-        if st.session_state.ever_submitted:
-            combined_data = combine_spectra(data, labels, x_column, y_column, same_x)
+        x_column = data[0].columns[0]
+        y_column = 'Absorbance'
+        if len(data) > 0:
+            combined_data = combine_spectra(data, labels, x_column, y_column)
 
         use_plotly = st.checkbox("Use plotly?", value=False)
 
@@ -140,11 +155,14 @@ Use the boxes below to change the labels for each line that will go on the graph
                         labels={'value': y_label, x_column: x_label})
                 st.plotly_chart(plotly_fig)
             else:
+                grid = st.checkbox("Grid?", value=False)
                 fig, ax = plt.subplots()
-                for col, fname, label in zip(combined_data.values[:, 1:].T, filenames, labels):
+                for col, label in zip(combined_data.values[:, 1:].T, labels):
                     ax.plot(x_data, col, label=label)
                 ax.set_xlabel(x_label)
                 ax.set_ylabel(y_label)
+                if grid:
+                    ax.grid(color='0.8')
                 ax.legend()
                 st.pyplot(fig)
             

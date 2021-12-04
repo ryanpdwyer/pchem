@@ -118,9 +118,9 @@ Use the boxes below to change the labels for each line that will go on the graph
                 fig, ax = plt.subplots()
             for df, fname, label in zip(data, filenames, labels):
                 if use_plotly:
-                    fig.add_trace(go.Line(x=df[x_column], y=df[y_column], name=str(fname[0])+"-"+label))
+                    fig.add_trace(go.Line(x=df[x_column], y=df[y_column], name=label))
                 else:
-                    ax.plot(df[x_column].values, df[y_column].values, label=str(fname[0])+"-"+label)
+                    ax.plot(df[x_column].values, df[y_column].values, label=label)
             
 
             y_label_default = f"{y_column} ({settings['y_scale']})"
