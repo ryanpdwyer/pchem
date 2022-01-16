@@ -14,15 +14,53 @@ import thermoGas
 import entropySplit
 import plotExcel
 
+import socket
+import copy
+
+import streamlit.report_thread as ReportThread
+from streamlit.server.server import Server
+
+
+def _get_session():
+    """Get the session object from Streamlit
+
+    Returns:
+        object: the session object for the current thread
+
+    """
+    # Hack to get the session object from Streamlit.
+
+    ctx = ReportThread.get_report_ctx()
+
+    session = None
+    session_infos = Server.get_current()._session_info_by_id.items()
+
+    session_id = None
+    for id, session_info in session_infos:
+        s = session_info.session
+        if (not hasattr(s, '_main_dg') and s._uploaded_file_mgr == ctx.uploaded_file_mgr):
+            session_id = id
+
+    if session_id is None:
+        raise RuntimeError(
+            "Oh no! Couldn't get your Streamlit Session object"
+            'Are you doing something fancy with threads?')
+    return session_id
+
+
+
 @st.cache
 def configLog():
-        logging.basicConfig(filename='debug-log.log', encoding='utf-8', level=logging.INFO, force=True)
+        logging.basicConfig(filename='debug-log.log', encoding='utf-8',
+                level=logging.INFO, force=True,
+                    format='%(asctime)s.%(msecs)03d %(levelname)s - %(funcName)s: %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',)
 
 
 configLog()
 
 startTime = time.time_ns()/1e6
-logging.info(f"Start Script")
+logging.info(f"Start Script - id: "+_get_session())
 
 
 st.title("Physical Chemistry Tools")
