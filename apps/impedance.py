@@ -268,14 +268,18 @@ def run():
         st.markdown("""To use a circuit element, choose the first letter of the
         string to be
         
-        R: Resistor
-        C: Capacitor
+        R: Resistor (Ω)
+        C: Capacitor (uF)
         P: Constant Phase Element
-        W: Warburg Element
+            - P (commonly Q, units Ω⁻¹ μsⁿ)
+            - n: Unitless, 0 < n < 1
+        W: Warburg Element (Ω)
         
-    To connect circuit elements, use `-` for a series connection and
-    `//` for a parallel connection. You can use parenthesis to clarify any ambiguities. For example,
-    R1 and R2 (in series) in parallel with C1 would be written `(R1-R2)//C1`""")
+To connect circuit elements, use `-` for a series connection and
+`//` for a parallel connection. You can use parenthesis to clarify
+any ambiguities. For example,
+R1 and R2 (in series) in parallel with
+C1 would be written `(R1-R2)//C1`""")
 
     mod = circuit_from_string(circuit_str)
 
