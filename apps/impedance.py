@@ -294,11 +294,7 @@ C1 would be written `(R1-R2)//C1`""")
     render_svg(d2.get_imagedata())
         
 
-    st.markdown("""## Load Experimental Data
-
-    Steal basic code from my other streamlit apps.
-
-    """)
+    st.markdown("""## Load Experimental Data""")
 
     files = st.file_uploader("Load Experimental Data", accept_multiple_files=True)
 
