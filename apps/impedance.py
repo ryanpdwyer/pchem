@@ -13,6 +13,100 @@ import sympy as sm
 import schemdraw
 import schemdraw.elements as elm
 
+import io
+
+
+def base64png(fig):
+    pic_IObytes = io.BytesIO()
+    fig.savefig(pic_IObytes, format='png')
+    pic_IObytes.seek(0)
+    pic_hash = base64.b64encode(pic_IObytes.read())
+    return pic_hash.decode('utf-8')
+
+
+def base64svgfig(fig, alt):
+    pic_IObytes = io.BytesIO()
+    fig.savefig(pic_IObytes, format='svg')
+    pic_IObytes.seek(0)
+    b64 = base64.b64encode(pic_IObytes.read()).decode('utf-8')
+    return f'<img src="data:image/svg+xml;base64, {b64}" alt="{alt}"/>'
+
+
+def base64svg(svg, alt):
+    b64 = base64.b64encode(svg).decode("utf-8")
+    return f'<img src="data:image/svg+xml;base64, {b64}" alt="{alt}"/>'
+
+def img64(b64, alt="Report figure"):
+    return f'<img src="data:image/png;base64, {b64}" alt="{alt}"/>'
+
+
+def html_output(fig, f2, d2, fits, files, data):
+    fig_png = base64png(fig)
+    f2_png = base64png(f2)
+    fname = files[0].name
+    report = fits[0].fit_report()
+    raw_data = data[0].to_html(classes='mystyle')
+    html = f"""
+    <html>
+    <head>
+    <style>
+.mystyle {{
+    font-size: 11pt; 
+    font-family: Arial;
+    border-collapse: collapse; 
+    border: 1px solid silver;
+
+}}
+
+.mystyle td, th {{
+    padding: 5px;
+}}
+
+.mystyle tr:nth-child(even) {{
+    background: #E0E0E0;
+}}
+
+.mystyle tr:hover {{
+    background: silver;
+    cursor: pointer;
+}}
+    </style>
+    </head>
+    <body>
+    <h1>Streamlit Impedance Report</h1>
+
+    <p>Filename: {fname}</p>
+
+    <h3>Parameters and Fit Report</h3>
+    <pre>
+    <code>
+    {report}
+    </code>
+    </pre>
+    
+    <h2>Circuit</h2>
+    {base64svg(d2.get_imagedata(), "Circuit")}
+
+
+    <h2>Impedance vs. Frequency</h2>
+    {base64svgfig(fig, alt="Impedance")}
+
+    <h2>Nyquist Plot</h2>
+    {base64svgfig(f2, alt="Impedance")}
+
+
+
+
+    <h3>Raw Data</h3>
+
+    {raw_data}
+    </body>
+    </html>"""
+    return html
+
+    
+
+
 # import plotly.express as px
 # import pandas as pd
 
@@ -296,13 +390,13 @@ C1 would be written `(R1-R2)//C1`""")
 
     st.markdown("""## Load Experimental Data""")
 
-    files = st.file_uploader("Load Experimental Data", accept_multiple_files=True)
+    files = [st.file_uploader("Load Experimental Data", accept_multiple_files=False)]
 
     data = []
     labels = []
     # Process each file...
 
-    if files:
+    if None not in files:
         st.write(files)
 
         filenames = [(i, f.name) for i, f in enumerate(files)]
@@ -332,19 +426,22 @@ C1 would be written `(R1-R2)//C1`""")
         
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
 
-
-    st.sidebar.markdown("### Frequencies")
-    freqs = np.geomspace(
-            st.sidebar.number_input("f_start", value=1.0, format="%.1e"),
-            st.sidebar.number_input("f_end", value=1e4, format="%.1e"),
-            int(st.sidebar.number_input("f_pts", value=100, format="%d"))
-    )
+    
+    plotModel = st.sidebar.checkbox("Plot model?", value=True)
+    if plotModel:
+        st.sidebar.markdown("### Frequencies")
+        freqs = np.geomspace(
+                st.sidebar.number_input("Start freq (Hz)", value=1.0, format="%.1e"),
+                st.sidebar.number_input("End Freq (Hz)", value=1e4, format="%.1e"),
+                int(st.sidebar.number_input("Pts", value=100, format="%d"))
+        )
 
     st.sidebar.markdown("### Parameters")
     param_values = [st.sidebar.number_input(x.name, value=default_val(x.name),
                         format='%.2e') for x in mod.params_sorted]
 
-    # out = mod.Zfunc(freqs, *param_values)
+    if plotModel:
+        out = mod.Zfunc(freqs, *param_values)
 
     fits = []
     for label, d in zip(labels, data):
@@ -369,8 +466,9 @@ C1 would be written `(R1-R2)//C1`""")
         a2.plot(d[x_column], -d[y_column], '.', label=label)
         a2.plot(Z_fit.real, -Z_fit.imag , label=label+' fit')
     
-    # Model
-    # a2.plot(out.real, -out.imag, color='0')
+    if plotModel:
+        a2.plot(out.real, -out.imag, label='Model', color='0')
+
 
     a2.set_xlabel("Z' (ohm)")
     a2.set_ylabel("-Z\" (ohm)")
@@ -383,17 +481,21 @@ C1 would be written `(R1-R2)//C1`""")
 
     fig, ax = plt.subplots()
 
+    color_cycle = ax._get_lines.prop_cycler
     for d, fit, label in zip(data, fits, labels):
         Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
-        ax.semilogx(d[f_column], d[x_column], '.', label=label+' Z\'')
-        ax.semilogx(d[f_column], -d[y_column], '-.', label=label+' -Z\"')
+        l1, = ax.semilogx(d[f_column], d[x_column], '.', label=label+' Z\'')
+        new_color = next(color_cycle)['color']
+        l2 = ax.scatter(d[f_column], -d[y_column], s=6, marker='o',fc='none', ec=new_color, label=label+' -Z\"')
         
-        ax.semilogx(d[f_column], Z_fit.real, '--', label=label+' Z\' fit')
-        ax.semilogx(d[f_column], -Z_fit.imag, '--', label=label+' -Z" fit')
+        ax.semilogx(d[f_column], Z_fit.real, '-', color=l1.get_color(), label=label+' Z\' fit')
+        ax.semilogx(d[f_column], -Z_fit.imag, '--', color=new_color, label=label+' -Z" fit')
 
     # Model
-    # ax.semilogx(freqs, out.real, color='0', label="Model $Z'$")
-    # ax.semilogx(freqs, -out.imag,  '--', color='0',label="Model $-Z''$")
+    if plotModel:
+        ax.semilogx(freqs, out.real, color='0', label="Model $Z'$")
+        ax.semilogx(freqs, -out.imag,  '--', color='0',label="Model $-Z''$")
+    
     ax.set_xlabel("Frequency (Hz)")
     ax.set_ylabel("Z (ohm)")
     ax.legend()
@@ -402,6 +504,7 @@ C1 would be written `(R1-R2)//C1`""")
 
     # st.write(np.c_[out.real, out.imag])
 
+    st.download_button(label="Download Report", data=html_output(fig, f2, d2, fits, files, data), file_name='report.html')
     
 
 if __name__ == '__main__':
