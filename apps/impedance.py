@@ -503,7 +503,7 @@ C1 would be written `(R1-R2)//C1`""")
     st.pyplot(fig)
 
     # st.write(np.c_[out.real, out.imag])
-    if files is not None:
+    if None not in files:
         st.download_button(label="Download Report", data=html_output(fig, f2, d2, fits, files, data), file_name='report.html')
     
 
