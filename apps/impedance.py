@@ -126,7 +126,7 @@ class ZElements:
 
 
 
-Zdef = dict(R=100.0, C=1.0, W=10.0, P=1.0, n=0.5)
+Zdef = dict(R=100.0, C=1.0, W=10.0, P=1.0, n=0.5, L=10.0)
 
 def impedance(x):
     try:
@@ -166,7 +166,7 @@ def render_svg(svg):
     html = r'<img src="data:image/svg+xml;base64,%s"/>' % b64
     st.write(html, unsafe_allow_html=True)
 
-cDict = dict(R=elm.Resistor, C=elm.Capacitor, W=elm.RBox, P=elm.RBox)
+cDict = dict(R=elm.Resistor, C=elm.Capacitor, W=elm.RBox, P=elm.RBox, L=elm.Inductor)
 
 
 
@@ -174,7 +174,8 @@ class EClass:
     f = sm.symbols('f')
     Z = dict(R=lambda x: x, C=lambda x: 1/(2*sm.pi*sm.I*EClass.f*x),
         W= lambda x: x/sm.sqrt(2*sm.pi*EClass.f)+x/(1j*sm.sqrt(2*sm.pi*EClass.f)),
-        P= lambda x, y: 1/(x*(2*sm.pi*EClass.f)**y)*sm.exp(-sm.pi/2*y*sm.I)
+        P= lambda x, y: 1/(x*(2*sm.pi*EClass.f)**y)*sm.exp(-sm.pi/2*y*sm.I),
+        L=lambda x: 2*sm.I*sm.pi*EClass.f*x
         )
 
     def __call__(self, label):
@@ -364,6 +365,7 @@ def run():
         
         R: Resistor (Ω)
         C: Capacitor (uF)
+        L: Inductor (uH)
         P: Constant Phase Element
             - P (commonly Q, units Ω⁻¹ μsⁿ)
             - n: Unitless, 0 < n < 1
