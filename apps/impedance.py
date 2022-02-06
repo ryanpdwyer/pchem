@@ -430,8 +430,7 @@ C1 would be written `(R1-R2)//C1`""")
             format_func=lambda x: x[1], index=0)
 
         st.write("""### Labels
-    Use the boxes below to change the labels for each line that will go on the graph.
-        """)
+Use the boxes below to change the labels for each line that will go on the graph.""")
         labels = [st.text_input(f"{filename[0]}. {filename[1]}", value="") for filename in filenames]
         
         if ind_fname:
