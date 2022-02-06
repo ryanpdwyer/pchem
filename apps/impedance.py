@@ -40,68 +40,79 @@ def img64(b64, alt="Report figure"):
     return f'<img src="data:image/png;base64, {b64}" alt="{alt}"/>'
 
 
-def html_output(fig, f2, d2, fits, files, data):
+def html_output(fig, f2, f_r, d2, fits, files, data, cis):
     fig_png = base64png(fig)
     f2_png = base64png(f2)
     fname = files[0].name
     report = fits[0].fit_report()
+    ci_report = lm.ci_report(cis[0])
     raw_data = data[0].to_html(classes='mystyle')
     html = f"""
-    <html>
-    <head>
-    <style>
+<html>
+<head>
+<style>
 .mystyle {{
-    font-size: 11pt; 
-    font-family: Arial;
-    border-collapse: collapse; 
-    border: 1px solid silver;
+font-size: 11pt; 
+font-family: Arial;
+border-collapse: collapse; 
+border: 1px solid silver;
 
 }}
 
 .mystyle td, th {{
-    padding: 5px;
+padding: 5px;
 }}
 
 .mystyle tr:nth-child(even) {{
-    background: #E0E0E0;
+background: #E0E0E0;
 }}
 
 .mystyle tr:hover {{
-    background: silver;
-    cursor: pointer;
+background: silver;
+cursor: pointer;
 }}
-    </style>
-    </head>
-    <body>
-    <h1>Streamlit Impedance Report</h1>
+</style>
+</head>
+<body>
+<h1>Streamlit Impedance Report</h1>
 
-    <p>Filename: {fname}</p>
+<p>Filename: {fname}</p>
 
-    <h3>Parameters and Fit Report</h3>
-    <pre>
-    <code>
-    {report}
-    </code>
-    </pre>
-    
-    <h2>Circuit</h2>
-    {base64svg(d2.get_imagedata(), "Circuit")}
+<h3>Parameters and Fit Report</h3>
+<pre>
+<code>
+{report}
+</code>
+</pre>
 
+<h4>Confidence Intervals</h4>
+<pre>
+<code>
+{ci_report}
+</code>
+</pre>
 
-    <h2>Impedance vs. Frequency</h2>
-    {base64svgfig(fig, alt="Impedance")}
-
-    <h2>Nyquist Plot</h2>
-    {base64svgfig(f2, alt="Impedance")}
-
-
+<h2>Circuit</h2>
+{base64svg(d2.get_imagedata(), "Circuit")}
 
 
-    <h3>Raw Data</h3>
+<h2>Impedance vs. Frequency</h2>
+{base64svgfig(fig, alt="Impedance")}
 
-    {raw_data}
-    </body>
-    </html>"""
+<h3>Residuals</h3>
+{base64svgfig(f_r, alt="Impedance Resid.")}
+
+<h2>Nyquist Plot</h2>
+{base64svgfig(f2, alt="Impedance")}
+
+
+
+
+<h3>Raw Data</h3>
+
+{raw_data}
+</body>
+</html>"""
     return html
 
     
@@ -209,7 +220,7 @@ class Parallel:
         xi, yi = d.here
 
         delta_len = abs(len(second) - len(first))
-        print(delta_len)
+        # print(delta_len)
         if self.first_branch_longer():
             d += elm.Line().up(d.unit*space)
             d += elm.Line().right(d.unit*0.01)
@@ -300,15 +311,22 @@ class ImpedanceMod:
 
 
 
-    def create_model(self):
+    def create_model(self, **kwargs):
         self.ZModel = lm.Model(self.Zfit)
         for p in self.param_names:
-            if p[0] == 'n':
-                self.ZModel.set_param_hint(p, value=0.5, vary=True, min=0.0, max=1.0)
+            if p in kwargs:
+                val = kwargs[p]
+            elif p[0] == 'n':
+                val = 0.5
             else:
-                self.ZModel.set_param_hint(p, value=1.0, vary=True, min=0.0)
+                val = 1.0
+            if p[0] == 'n':
+                self.ZModel.set_param_hint(p, value=val, vary=True, min=0.0, max=1.0)
+            else:
+                self.ZModel.set_param_hint(p, value=val, vary=True, min=0.0)
 
         self.pars = self.ZModel.make_params()
+        return self.pars
 
     def Zfit(self, f, **params):
         # Return real, then imaginary parts...
@@ -353,7 +371,11 @@ def run():
 
     st.title("Fit Impedance Model")
 
+    st.markdown("""
+This page fits electrochemical impedance spectroscopy data to a circuit chosen below.
+""")
 
+    st.markdown("## Circuit")
 
     # Here is a nice circuit - we should probably be saving the value to local storage
 
@@ -379,8 +401,6 @@ C1 would be written `(R1-R2)//C1`""")
 
     mod = circuit_from_string(circuit_str)
 
-    mod.Z
-    mod.network
 
     mod.create_model()
 
@@ -388,6 +408,8 @@ C1 would be written `(R1-R2)//C1`""")
         mod.network.draw(d2)
 
     render_svg(d2.get_imagedata())
+    st.markdown("Impedance:")
+    st.write(mod.Z)
         
 
     st.markdown("""## Load Experimental Data""")
@@ -407,17 +429,17 @@ C1 would be written `(R1-R2)//C1`""")
         ind_fname = st.selectbox("Choose data to display: ", filenames,
             format_func=lambda x: x[1], index=0)
 
-        st.write("""## Labels
+        st.write("""### Labels
     Use the boxes below to change the labels for each line that will go on the graph.
         """)
-        labels = [st.text_input(f"{filename[0]}. {filename[1]}", value=filename[1]) for filename in filenames]
+        labels = [st.text_input(f"{filename[0]}. {filename[1]}", value="") for filename in filenames]
         
         if ind_fname:
             df = data[ind_fname[0]]
             cols = list(df.columns)
 
 
-        st.write("## Choose columns")
+        st.write("### Choose columns")
         with st.form("column_chooser_and_run"):
             f_column = st.selectbox("Choose the frequency column: ", cols)
             x_column = st.selectbox("Choose Z' (in-phase, X) column: ", cols, index=len(cols)-2)
@@ -429,7 +451,7 @@ C1 would be written `(R1-R2)//C1`""")
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
 
     
-    plotModel = st.sidebar.checkbox("Plot model?", value=True)
+    plotModel = st.sidebar.checkbox("Plot initial model?", value=True)
     if plotModel:
         st.sidebar.markdown("### Frequencies")
         freqs = np.geomspace(
@@ -438,7 +460,7 @@ C1 would be written `(R1-R2)//C1`""")
                 int(st.sidebar.number_input("Pts", value=100, format="%d"))
         )
 
-    st.sidebar.markdown("### Parameters")
+    st.sidebar.markdown("### Initial Parameters")
     param_values = [st.sidebar.number_input(x.name, value=default_val(x.name),
                         format='%.2e') for x in mod.params_sorted]
 
@@ -446,24 +468,33 @@ C1 would be written `(R1-R2)//C1`""")
         out = mod.Zfunc(freqs, *param_values)
 
     fits = []
+    cis = []
     for label, d in zip(labels, data):
         y_data = np.r_[d[x_column].values, d[y_column].values]
         param_items = dict(zip(mod.param_names, param_values))
-        st.write(f'Params for {label}:')
-        st.write(mod.pars)
+        pars = mod.create_model(**param_items)
+        f_data = d[f_column].values
+        result = mod.ZModel.fit(y_data, pars, f=f_data)
+        def func(kwargs):
+            return mod.ZModel.eval(f=f_data, **kwargs) - y_data
+        minimizer = lm.Minimizer(func, result.params)
+        ci = lm.conf_interval(minimizer, result, sigmas=[1, 2])
+        cis.append(ci)
         fits.append(
-            mod.ZModel.fit(y_data, mod.pars, f=d[f_column].values)
+            result
         )
     
-    st.markdown("### Best-fit parameters")
+    st.markdown("""## Results""")
 
-    for fit in fits:
-        st.code(fit.fit_report())
+    for fit, ci in zip(fits,cis):
+        st.text(fit.fit_report())
+        ci_report = lm.ci_report(ci)
+        st.text(ci_report)
 
     f2, a2 = plt.subplots()
 
     for d, fit, label in zip(data, fits, labels):
-        st.write(fit.best_values)
+        # st.write(fit.best_values)
         Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
         a2.plot(d[x_column], -d[y_column], '.', label=label)
         a2.plot(Z_fit.real, -Z_fit.imag , label=label+' fit')
@@ -471,9 +502,8 @@ C1 would be written `(R1-R2)//C1`""")
     if plotModel:
         a2.plot(out.real, -out.imag, label='Model', color='0')
 
-
-    a2.set_xlabel("Z' (ohm)")
-    a2.set_ylabel("-Z\" (ohm)")
+    a2.set_xlabel("$ Z' $ (ohm)")
+    a2.set_ylabel("$-Z''$ (ohm)")
     a2.set_aspect('equal', 'box')
     a2.legend()
     f2.tight_layout()
@@ -483,6 +513,8 @@ C1 would be written `(R1-R2)//C1`""")
 
     fig, ax = plt.subplots()
 
+    f_r, ax_r = plt.subplots()
+
     color_cycle = ax._get_lines.prop_cycler
     for d, fit, label in zip(data, fits, labels):
         Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
@@ -490,23 +522,30 @@ C1 would be written `(R1-R2)//C1`""")
         new_color = next(color_cycle)['color']
         l2 = ax.scatter(d[f_column], -d[y_column], s=6, marker='o',fc='none', ec=new_color, label=label+' -Z\"')
         
-        ax.semilogx(d[f_column], Z_fit.real, '-', color=l1.get_color(), label=label+' Z\' fit')
-        ax.semilogx(d[f_column], -Z_fit.imag, '--', color=new_color, label=label+' -Z" fit')
+        ax.semilogx(d[f_column], Z_fit.real, '-', color=l1.get_color(), label=label+" $Z'$ mod")
+        ax.semilogx(d[f_column], -Z_fit.imag, '--', color=new_color, label=label+" $-Z''$ mod")
+
+        ax_r.semilogx(d[f_column], d[x_column].values - Z_fit.real, '.', color=l1.get_color(), label="$Z'$")
+        ax_r.scatter(d[f_column], -d[y_column].values + Z_fit.imag, s=6, marker='o', ec=new_color, fc='none', label="$Z''$")
 
     # Model
     if plotModel:
         ax.semilogx(freqs, out.real, color='0', label="Model $Z'$")
         ax.semilogx(freqs, -out.imag,  '--', color='0',label="Model $-Z''$")
     
-    ax.set_xlabel("Frequency (Hz)")
-    ax.set_ylabel("Z (ohm)")
-    ax.legend()
+    for ax_ in [ax, ax_r]:
+        ax_.set_xlabel("Frequency (Hz)")
+        ax_.legend()
+
+    ax.set_ylabel("$Z$ (ohm)")
+    ax_r.set_ylabel("Resid. $r = Z - Z_\\mathrm{model}$(ohm)")
 
     st.pyplot(fig)
 
-    # st.write(np.c_[out.real, out.imag])
+    st.pyplot(f_r)
+
     if None not in files:
-        st.download_button(label="Download Report", data=html_output(fig, f2, d2, fits, files, data), file_name='report.html')
+        st.download_button(label="Download Report", data=html_output(fig, f2, f_r, d2, fits, files, data, cis), file_name='report.html')
     
 
 if __name__ == '__main__':
