@@ -18,7 +18,7 @@ import plotExcel
 import socket
 import copy
 
-import streamlit.report_thread as ReportThread
+from streamlit.script_run_context import get_script_run_ctx
 from streamlit.server.server import Server
 
 
@@ -31,7 +31,7 @@ def _get_session():
     """
     # Hack to get the session object from Streamlit.
 
-    ctx = ReportThread.get_report_ctx()
+    ctx = get_script_run_ctx()
 
     session = None
     session_infos = Server.get_current()._session_info_by_id.items()
