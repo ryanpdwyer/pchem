@@ -262,7 +262,6 @@ class State3:
             T = T0 + x[-1]
             return -self.S(x=state, T=T) # Negative entropy...
         
-        print(Ag.shape)
         res = optimize.minimize(Sfunc, x0=np.zeros(Ag.shape[1]), constraints=[bounds, Hconstraint])
             #method='SLSQP')
 
@@ -274,7 +273,6 @@ class State3:
         x = self.x if x is None else x
         T = x[-1] if T is None and len(x)>self.N_chem else T
         T = self.T if T is None else T
-        print(T)
         x_conc = x[:self.N_chem]
         RT = T*8.3145
         Gbar = self.get_prop_conc('Gbar', x=x_conc, T=T)
@@ -286,7 +284,7 @@ class State3:
         T0 = self.T
         A = self.A
         y = np.zeros_like(x)
-        x_conc = x[:self.N_chem]
+        x_conc = np.clip(x[:self.N_chem], 0, np.inf) # Conc must be positive or zero...
         T = x[-1]
         RT = 8.3145*T
         V = self.volume(x_conc)
@@ -297,8 +295,8 @@ class State3:
         y[:self.N_chem] = Gbar + A.T @ mus # Needed a transpose here... going from chemical potential of atoms to species
         # If solid or liquid species, multiply by moles to eliminate
         # any species that are not in the system.
-        y[:self.N_aq] = y[:self.N_aq] * V # Aqueous species only matter if V > 0...
-        y[self.N_aq:self.N_chem] = y[self.N_aq:self.N_chem] * x[self.N_aq:self.N_chem]
+        # y[:self.N_aq] = y[:self.N_aq] * V # Aqueous species only matter if V > 0...
+        # y[self.N_aq:self.N_chem] = y[self.N_aq:self.N_chem] * x[self.N_aq:self.N_chem]
         y[self.N_chem:-1] = self.n_moles - A @ x_conc
         y[-1] = (H - (Hbar @ x_conc - H0)) / RT
         return y
@@ -318,7 +316,31 @@ class State3:
         y[self.N_chem:] = self.n_moles - A @ x_conc
         return y
 
-    def fi(self, x):
+    @property
+    def chem_labels(self):
+        return tuple(x.name for x in self.chem_vals)
+
+    def fi(self, x, active_species):
+        """
+        
+        TO DO: This code needs to account for the fact that only certain condensed
+        species are active at any given time; this will change the index of each chemical.
+        
+        Maybe it is easiest to do this using a matrix transformation?
+
+        This will work - maybe a little slow, but that one matrix C will be enough
+        to do all the transformations.
+
+        x_reduced = C x
+
+        Cut out species with i = 3...
+        1 0 0 0   x_1
+        0 1 0 0   x_2
+        0 0 0 1   x_3
+                  x_4
+
+        The first matrix would be C - then we can do
+        """
         n_moles = x[:self.N_chem]
         n_moles_aq = n_moles[:self.N_aq]
         N_total = self.N_chem+self.N_atoms
@@ -336,15 +358,27 @@ class State3:
         neg_G_o_RT = -self.get_prop_conc('Gbar', x=n_moles,T=T)/RT
         y[:self.N_chem] = neg_G_o_RT # Output variables here...
         y[self.N_chem:] = self.f(x)[self.N_chem:]
-        out = linalg.lstsq(A, y)
-        dx = out[0]
+
+        # Bounds...
+        lb = np.ones(N_total)*-np.inf
+        lb[self.N_aq: self.N_chem] = -n_moles[self.N_aq: self.N_chem]
+        ub = np.ones(N_total)*np.inf
+
+        Ac= A[active_species][:, active_species]
+        yc = y[active_species]
+
+        out = linalg.solve(Ac, yc)
+        dx = np.zeros(N_total)
+        dx[active_species] = out
+
         x_new = np.r_[n_moles_aq*np.exp(dx[:self.N_aq]),
                     n_moles[self.N_aq:] + dx[self.N_aq:self.N_chem], 
                     dx[self.N_chem:]
         ]
         return x_new
 
-    
+
+
     def fHi(self, x, dH):
         n_moles = x[:self.N_chem]
         n_moles_aq = n_moles[:self.N_aq]
@@ -376,8 +410,12 @@ class State3:
         y[:self.N_chem] = neg_G_o_RT # Output variables here...
 
         y[self.N_chem:] = self.fH(x, dH)[self.N_chem:] # True for dT too? Probably not...
-        out = linalg.lstsq(A, y)
-        dx = out[0]
+        lb = np.ones(N_total)*-np.inf
+        lb[self.N_aq: self.N_chem] = -n_moles[self.N_aq: self.N_chem]
+        ub = np.ones(N_total)*np.inf
+
+        out = optimize.lsq_linear(A, y, bounds=(lb, ub))
+        dx = out.x
         x_new = np.r_[n_moles_aq*np.exp(dx[:self.N_aq]),
                     n_moles[self.N_aq:] + dx[self.N_aq:self.N_chem], 
                     dx[self.N_chem:-1],
@@ -385,22 +423,70 @@ class State3:
         ]
         return x_new
     
+
+    def _fHi(self, x, dH):
+            n_moles = x[:self.N_chem]
+            n_moles_aq = n_moles[:self.N_aq]
+            N_total = self.N_chem+self.N_atoms+1
+            T = self.T
+            cPtotal = self.get_prop('cP') @ n_moles
+            y = np.zeros(N_total)
+            RT = 8.3145*T
+            A = np.zeros(shape=(N_total, N_total))
+            A_aq_block = np.eye(self.N_aq, self.N_aq) # Identity matrix for aq species
+            A[:self.N_aq, :self.N_aq] = A_aq_block
+            A[:self.N_chem, self.N_chem:-1] = -self.A.T # Zeros for the s,l species
+            
+            neg_H_over_RT = -self.get_prop_conc('Hbar', x=n_moles,T=T) / (RT)
+
+            A[:self.N_chem, -1] = neg_H_over_RT
+            
+            A_lower_left = self.A[:, :self.N_aq] @ np.diag(n_moles_aq)
+            A[self.N_chem:-1, :self.N_aq] = A_lower_left
+            A[self.N_chem:-1, self.N_aq:self.N_chem] = self.A[:, self.N_aq:]
+
+            A[-1, :self.N_aq] = -neg_H_over_RT[:self.N_aq] * n_moles_aq
+            A[-1, self.N_aq: self.N_chem] = -neg_H_over_RT[self.N_aq: self.N_chem]
+
+            A[-1, -1] = cPtotal / 8.3145
+            
+            neg_G_o_RT = -self.get_prop_conc('Gbar', x=n_moles,T=T)/RT
+            
+            y[:self.N_chem] = neg_G_o_RT # Output variables here...
+
+            y[self.N_chem:] = self.fH(x, dH)[self.N_chem:] # True for dT too? Probably not...
+            lb = np.ones(N_total)*-np.inf
+            lb[self.N_aq: self.N_chem] = -n_moles[self.N_aq: self.N_chem]
+            ub = np.ones(N_total)*np.inf
+
+            return A, y
+
     def _transform(self, x):
         x_new = x.copy()
         x_new[:self.N_aq] = np.log(x_new[:self.N_aq]) # Log transform conc. variables
         return x_new
     
-    def _solve_iterative(self, x=None, T=None, max_iters=100, stop_tol=1e-8):
+    def _solve_iterative(self, x=None, T=None, max_iters=100, stop_tol=1e-8, first_soln=True):
         """NASA Gordon 1994 model """
         x_moles = self.x if x is None else x[:self.N_chem]
         T = self.T if T is None else T
         self.T = T
-        x_moles_initial = np.where(x_moles < 1e-10, 1e-10, x_moles)
+        print(x_moles)
+        x_moles_initial = x_moles.copy()
+
+        # Set all species to 1e-10 
+        if first_soln:
+            x_moles_initial[:self.N_aq] = np.where(x_moles < 1e-10, 1e-10, x_moles)[:self.N_aq]
+        
+        active_species = np.ones(self.N_chem + self.N_atoms, dtype=bool)
+
+        active_species[self.N_aq: self.N_chem] = x_moles[self.N_aq: self.N_chem] > 0 # Solids not present are inactive...
+
         x0 = np.r_[x_moles_initial, np.zeros(self.N_atoms)]
         x_guess = x0
         delta = []
         for i in range(max_iters):
-            x_new = self.fi(x_guess)
+            x_new = self.fi(x_guess, active_species)
             resid = self._transform(x_new) - self._transform(x_guess)
             max_change = max(abs(resid[:self.N_chem]))
             delta.append(max_change)
@@ -410,8 +496,26 @@ class State3:
 
         return x_new, delta
 
-
         
+    def _solve_iterative_dH(self, x=None, dH=0.0, max_iters=100, stop_tol=1e-8):
+        """NASA Gordon 1994 model """
+        x_moles = self.x if x is None else x[:self.N_chem]
+        T0 = self.T
+        x_moles_initial = np.where(x_moles < 1e-10, 1e-10, x_moles)
+        x0 = np.r_[x_moles_initial, np.zeros(self.N_atoms), T0]
+        x_guess = x0
+        delta = []
+        for i in range(max_iters):
+            x_new = self.fHi(x_guess, dH)
+            resid = np.r_[self._transform(x_new), x_new[-1]] - np.r_[self._transform(x_guess), x_guess[-1]]
+            max_change = max(abs(resid[:self.N_chem]))
+            delta.append(max_change)
+            x_guess = x_new
+            if max_change < stop_tol:
+                break
+
+        return x_new, delta
+
     
     def _solve_constT(self, T=None):
         T = self.T if T is None else T
@@ -487,7 +591,6 @@ class State3:
             S = Sbar[m] @ x[:-1][m]
             return -S, np.r_[-Sbar, -cP_total/T]
         
-        print(Ag.shape)
         res = optimize.minimize(Sfunc, x0=np.r_[self.x, 0.0], 
         constraints=[bounds, Hconstraint],
         bounds=bounds_variables,
