@@ -323,6 +323,8 @@ class State3:
     def fi(self, x, active_species):
         """
         
+        Add lambda as an input?
+
         TO DO: This code needs to account for the fact that only certain condensed
         species are active at any given time; this will change the index of each chemical.
         
@@ -474,6 +476,16 @@ class State3:
         print(x_moles)
         x_moles_initial = x_moles.copy()
 
+        lambda_initial = np.zeros(self.N_chem + self.N_atoms)
+
+        lambda_initial[:self.N_aq] = 2.0 # Max change allowed
+
+        lambda_initial[self.N_aq:self.N_chem] = np.maximum(1e-4, x_moles[self.N_aq: self.N_chem])
+
+        lambda_initial[self.N_chem:] = np.inf # Allow any changes to chemical potential
+
+        # Then I can use this to clamp...
+        
         # Set all species to 1e-10 
         if first_soln:
             x_moles_initial[:self.N_aq] = np.where(x_moles < 1e-10, 1e-10, x_moles)[:self.N_aq]

@@ -14,6 +14,7 @@ import thermoGas
 import impedance
 import entropySplit
 import plotExcel
+import arrhen
 
 import socket
 import copy
@@ -67,6 +68,7 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Physical Chemistry Tools")
 
 apps = {"Combine UV-Vis Data": combineCSV, 
+        "CHE 120 Kinetics": arrhen,
         "Combine CSV Electrochem": combineCSVElectrochem,
         'Plot Excel Data': plotExcel,
         "Plot Solartron Data": solartronData,
