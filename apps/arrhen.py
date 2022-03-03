@@ -72,7 +72,7 @@ def run():
     1. What is the activation energy for the reaction in kJ/mol?
     """)
 
-    correct_Ea = -m*8.3145 / 1000
+    correct_Ea = 8196.29*8.3145 / 1000
 
     Ea_response = st.number_input("Activation energy (kJ/mol)", value=0.0)
 
@@ -85,7 +85,7 @@ def run():
 
     A_response = st.number_input("Pre-exponential factor:", value=0.0, format="%2e")
     
-    correct_A = np.exp(b)
+    correct_A = np.exp(12.07)
 
     if A_response != 0.0 and abs(A_response-correct_A) > 1e4:
         st.write("Incorrect. Try again.")
