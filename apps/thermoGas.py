@@ -119,12 +119,12 @@ The sliders let you
     if 'container' not in st.session_state:
         st.session_state.container = "Dewar"
 
-    if 'data' not in st.session_state:
-        st.session_state.data = copy.copy(data_default)
+    if 'thermGasData' not in st.session_state:
+        st.session_state.thermGasData = copy.deepcopy(data_default)
     
 
-    m_gas = st.sidebar.slider("Mass (g) of gas: ", value=float(st.session_state.data["m"][-1]), max_value=20.0, min_value=0.05, step=0.05)
-    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=100.0, min_value=0.0, step=0.1)
+    m_gas = st.sidebar.slider("Mass (g) of gas: ", value=float(st.session_state.thermGasData["m"][-1]), max_value=20.0, min_value=0.05, step=0.05)
+    Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.thermGasData["Tsys"][-1]), max_value=100.0, min_value=0.0, step=0.1)
     Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=20.0, max_value=100.0, min_value=0.0, step=0.1)
     current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=2.5, step=0.01)
     container = st.sidebar.selectbox("System walls:", containers_list)
@@ -137,7 +137,7 @@ The sliders let you
     if start_stop_sim:
         st.session_state.running = not st.session_state.running
         if st.session_state.running: # Reset temperature...
-            st.session_state.data["Tsys"][-1] = Tsys
+            st.session_state.thermGasData["Tsys"][-1] = Tsys
         
         st.experimental_rerun()
     
@@ -145,7 +145,7 @@ The sliders let you
 
     if reset_simulation:
         st.session_state.running = False
-        st.session_state.data = copy.copy(data_default)
+        st.session_state.thermGasData = copy.copy(data_default)
         st.session_state.container = "Dewar"
 
         st.experimental_rerun()
@@ -155,8 +155,8 @@ The sliders let you
     else:
         st.markdown("### Simulation state: paused")
 
-    work = st.session_state.data["work"][-1]
-    Tsys = st.session_state.data["Tsys"][-1]
+    work = st.session_state.thermGasData["work"][-1]
+    Tsys = st.session_state.thermGasData["Tsys"][-1]
     Psys = Pressure_bar(m_gas, Tsys)
 
 
@@ -177,7 +177,7 @@ Pressure $P$ = {Psys:.3f} bar
 
     save_excel_button = False
     if show_data:
-        df = pd.DataFrame(st.session_state.data)
+        df = pd.DataFrame(st.session_state.thermGasData)
         df.rename(columns={"work": "work (J)", "Tsys": "Tsys (°C)", "t": "Time (s)", 'm': 'Mass (g)'}, inplace=True)
         pressures = [Pressure_bar(m, T) for m, T in zip(df['Mass (g)'].values, df["Tsys (°C)"].values)]
         df['P (bar)'] = pressures
@@ -192,10 +192,10 @@ Pressure $P$ = {Psys:.3f} bar
     # Needs to be at the bottom
     if st.session_state.running:
         work, Tsys = simulate(Tsys, Tsurr, current, work, st.session_state.container, m_gas)
-        st.session_state.data["work"].append(work)
-        st.session_state.data["Tsys"].append(Tsys)
-        st.session_state.data['m'].append(m_gas)
-        st.session_state.data['t'].append(st.session_state.data['t'][-1]+dt)
+        st.session_state.thermGasData["work"].append(work)
+        st.session_state.thermGasData["Tsys"].append(Tsys)
+        st.session_state.thermGasData['m'].append(m_gas)
+        st.session_state.thermGasData['t'].append(st.session_state.thermGasData['t'][-1]+dt)
         time.sleep(0.5)
         st.experimental_rerun()
 
