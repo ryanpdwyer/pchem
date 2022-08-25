@@ -35,8 +35,9 @@ def process_file(f):
         raw_data = np.loadtxt(f, skiprows=19, max_rows=2048 )
         data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Transmittance"])
     elif f.name.endswith("txt"):
-        # UV-1800 Data Print
-        data = pd.read_csv(f, skiprows=1)
+        # Fix this later...
+        raw_data = np.loadtxt(f, skiprows=13)
+        data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])
     else:
         raise NotImplementedError(f"Data loading not supported for file {f.name}")
     return data
