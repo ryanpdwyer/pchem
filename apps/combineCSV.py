@@ -65,6 +65,9 @@ def normalize_data(combined_data, x_column, settings):
     
     return combined_data, settings
 
+def check_nans(df, col, threshold=0.5):
+    return df[col].isna().sum() / len(df) > threshold
+
 def run():
     df = None
     cols = None
@@ -114,8 +117,17 @@ Use the boxes below to change the labels for each line that will go on the graph
 
         
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
+        
         if st.session_state.ever_submitted:
-            combined_data = combine_spectra(data, labels, x_column, y_column, same_x)
+
+            if check_nans(data[0], x_column):
+                st.markdown(f"Column `{x_column}` seems to be missing data; try selecting another column for the x-axis and **Submit** again.")
+                st.session_state.ever_submitted = False
+            elif check_nans(data[0], y_column):
+                st.markdown(f"Column `{y_column}` seems to be missing data; try selecting another column for the y-axis and **Submit** again.")
+                st.session_state.ever_submitted = False
+            else:
+                combined_data = combine_spectra(data, labels, x_column, y_column, same_x)
 
         use_plotly = st.checkbox("Use plotly?", value=False)
 
