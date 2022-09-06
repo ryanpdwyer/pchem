@@ -5,9 +5,7 @@ import pandas as pd
 import numpy as np
 import io
 import tempfile
-
-
-
+from io import StringIO 
 
 # def create_file( suffix='.png'):
 #     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmpfile:
@@ -41,6 +39,49 @@ def process_file(f):
     else:
         raise NotImplementedError(f"Data loading not supported for file {f.name}")
     return data
+
+
+class Enlighten_Data:
+    
+    def __init__(self, f):
+        fh = StringIO(f.getvalue().decode("utf-8"))
+        data = fh.readlines()
+        header = {}
+        for line in data[:33]:
+            keyval = str(line).split(',', maxsplit=1)
+            key=keyval[0]
+            if len(keyval)==1:
+                val = ""
+                
+            else:
+                val = keyval[1]
+            header[key] = val.strip()
+        
+
+        fh.seek(0)
+        df = pd.read_csv(fh, skiprows=34)
+        df['Label'] = header['Label']
+        df['Laser Power'] = float(header['Laser Power'])
+        df['Integration Time'] = float(header["Integration Time"])
+        df['Scan Averaging'] = float(header['Scan Averaging'])
+        df['Reprocessed'] = df['Processed'] / (df['Laser Power'] * df['Integration Time']) 
+            
+        important = ['Measurement ID', "Label", "Integration Time", "Timestamp", 'Laser Power', "Scan Averaging"]
+        
+        self.important = {key:val for key, val in header.items() if key in important}
+        self.header = header
+        self.df = df
+
+
+
+
+
+def process_raman(f):
+    if f.name.endswith("csv"):
+        return Enlighten_Data(f)
+    else:
+        raise NotImplementedError(f"Data loading not supported for file {f.name}")
+
 
 
 def find(val, array):

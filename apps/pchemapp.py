@@ -4,6 +4,7 @@ import time
 import numpy as np
 import streamlit as st
 import combineCSV
+import combineRaman
 import combineCSVElectrochem
 import thermoFirstLaw
 import thermoCalorimeter
@@ -68,6 +69,7 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Physical Chemistry Tools")
 
 apps = {"Combine UV-Vis Data": combineCSV, 
+        "Combine Raman Data": combineRaman,
         "CHE 120 Kinetics": arrhen,
         "Combine CSV Electrochem": combineCSVElectrochem,
         'Plot Excel Data': plotExcel,
@@ -79,7 +81,6 @@ apps = {"Combine UV-Vis Data": combineCSV,
         "Sympy Shell": ace,
         "Impedance": impedance,
         "AI Demo": openai_ex
-# 'ACE Editor': ace
 }
 
 app = st.selectbox("Choose an application:", list(apps.keys()))
