@@ -76,14 +76,13 @@ def run():
     if 'ever_submitted' not in st.session_state:
         st.session_state.ever_submitted = False
     settings = {}
-    st.markdown("""## Combine UV-Vis files
+    st.markdown("""## Combine Raman files
 
-This helper will combine multiple UV-Vis files (in CSV, Excel, Ocean Optics .Absorbance/.Transmittance, or Shimadzu UVProbe .txt format),
-plot/normalize the spectra, and output a single Excel file for easy plotting and anaysis.
+This helper will combine multiple Raman files from the Wasatch Photonics spectrometer.
 
     """)
 
-    files = st.file_uploader("Upload CSV or Excel Files",
+    files = st.file_uploader("Upload CSV Files",
                 accept_multiple_files=True)
 
 
