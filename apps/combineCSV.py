@@ -7,6 +7,7 @@ import streamlit as st
 import io
 import base64
 from util import find, write_excel, process_file
+import util
 
 
 
@@ -17,7 +18,8 @@ def combine_spectra(dataframes, labels, xcol, ycol, tol=1e-6):
     col_names.extend(labels)
     for df in dataframes:
         x = df[xcol].values
-        if abs(x - x_data).max() > tol:
+        if (len(x) != len(x_data)) or abs(x - x_data).max() > tol:
+            st.write("X axes are different - Try deselecting `Same x axis?` and Submit again.")
             raise ValueError("X axis of each dataset should be the same!")
         
         y = df[ycol].values
@@ -40,6 +42,10 @@ def limit_x_values(combined_data, x_column, settings):
     settings['x_min'] = x_min_val
     settings['x_max'] = x_max_val
     return combined_data, settings
+
+
+
+
 
 def normalize_data(combined_data, x_column, settings):
     st.markdown("### Normalization options")
@@ -105,7 +111,7 @@ Use the boxes below to change the labels for each line that will go on the graph
             df = data[ind_fname[0]]
             cols = list(df.columns)
     
-
+        
         st.write("## Choose columns")
         with st.form("column_chooser_and_run"):
             x_column = st.selectbox("Choose the x column: ", cols)
@@ -117,19 +123,21 @@ Use the boxes below to change the labels for each line that will go on the graph
 
         
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
-        
-        if st.session_state.ever_submitted:
+        use_separate_x = False
 
+        if st.session_state.ever_submitted:
             if check_nans(data[0], x_column):
-                st.markdown(f"Column `{x_column}` seems to be missing data; try selecting another column for the x-axis and **Submit** again.")
+                st.markdown(f"Column `{x_column}' seems to be missing data; try selecting another column for the x-axis and **Submit** again.")
                 st.session_state.ever_submitted = False
             elif check_nans(data[0], y_column):
-                st.markdown(f"Column `{y_column}` seems to be missing data; try selecting another column for the y-axis and **Submit** again.")
-                st.session_state.ever_submitted = False
-            else:
+                st.markdown(f"Column '{y_column}' seems to be missing data; try selecting another column for the y-axis and **Submit** again.")
+            elif same_x:
                 combined_data = combine_spectra(data, labels, x_column, y_column, same_x)
+            else:
+                use_separate_x = True
 
         use_plotly = st.checkbox("Use plotly?", value=False)
+        grid = st.checkbox("Grid?", value=False)
 
         if combined_data is not None:
             combined_data, settings = limit_x_values(combined_data, x_column, settings)
@@ -155,20 +163,53 @@ Use the boxes below to change the labels for each line that will go on the graph
                 fig, ax = plt.subplots()
                 for col, fname, label in zip(combined_data.values[:, 1:].T, filenames, labels):
                     ax.plot(x_data, col, label=label)
+                if grid:
+                    ax.grid()
                 ax.set_xlabel(x_label)
                 ax.set_ylabel(y_label)
                 ax.legend()
                 st.pyplot(fig)
-            
-
-            
-
 
             # Saving
             st.markdown("### Output options")
             st.write(combined_data)
             filename = st.text_input("Filename:", value="data")
             write_excel(combined_data, filename)
+
+        elif use_separate_x:
+            data, settings = util.limit_x_values(data, x_column, settings, step=1.0)
+            
+            y_label_default = ""
+            # if settings['processing'] != 'None':
+            #     y_label_default += settings['processing']+" "
+            y_label_default+=y_column
+
+
+            st.markdown("### Plotting options")    
+            x_label = st.text_input("x-axis label: ", value=x_column)
+            y_label = st.text_input('y-axis label: ', value=y_label_default)
+
+            # Plotting
+            if use_plotly:
+                fig = go.Figure()
+                for df, fname, label in zip(data, filenames, labels):
+                    fig.add_trace(go.Line(x=df[x_column], y=df[y_column], name=label))
+                fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+                st.plotly_chart(fig)
+            else:
+                fig, ax = plt.subplots()
+                for d, fname, label in zip(data, filenames, labels):
+                    ax.plot(d[x_column], d[y_column], label=label)
+                ax.set_xlabel(x_label)
+                ax.set_ylabel(y_label)
+                if grid:
+                    ax.grid()
+                ax.legend()
+                st.pyplot(fig)
+            
+
+            
+
 
 if __name__ == "__main__":
     run()

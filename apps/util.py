@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import io
 import tempfile
+import re
 from io import StringIO 
 
 # def create_file( suffix='.png'):
@@ -17,6 +18,17 @@ from io import StringIO
 #     filename = st.text_input("Filename:", default_filename)
 #     download_figure = st.download_button(label, filename=filename+suffix,)
 
+def limit_x_values(data, x_column, settings, step=None):
+    st.markdown("### Limit x Range")
+    x_min = st.number_input("Choose minimum x:", value=min([min(df[x_column].values) for df in data]), step=step)
+    x_max = st.number_input("Choose maximum x:", value=max([max(df[x_column].values) for df in data]), step=step)
+    settings['x_min'] = x_min
+    settings['x_max'] = x_max
+    data_out = []
+    for df in data:
+        mask = (df[x_column].values > x_min) * (df[x_column].values < x_max)
+        data_out.append(df[mask])
+    return data_out, settings
 
 
 
@@ -33,9 +45,21 @@ def process_file(f):
         raw_data = np.loadtxt(f, skiprows=19, max_rows=2048 )
         data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Transmittance"])
     elif f.name.endswith("txt"):
-        # Fix this later...
-        raw_data = np.loadtxt(f, skiprows=13)
-        data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])
+        str_rep = f.getvalue().decode("utf-8")
+        if 'Instrument Name:,UV-1800' in str_rep:
+            text=str_rep.splitlines()
+            header_regex = '\[.+\]'
+            groups = re.split(header_regex, str_rep)
+            headings = re.findall(header_regex, str_rep)
+            data_start = text.index('Wavelength (nm),Absorbance')
+
+            data = pd.read_csv(f, skiprows=data_start-1)
+
+        elif '>>>>>Begin Spectral Data<<<<<' in str_rep:
+            raw_data = np.loadtxt(f, skiprows=13)
+            data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])
+        else:
+            data = pd.read_table(f)
     else:
         raise NotImplementedError(f"Data loading not supported for file {f.name}")
     return data
