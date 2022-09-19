@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 import io
 import base64
@@ -85,7 +86,7 @@ def run():
     st.markdown("""## Combine UV-Vis files
 
 This helper will combine multiple UV-Vis files (in CSV, Excel, Ocean Optics .Absorbance/.Transmittance, or Shimadzu UVProbe .txt format),
-plot/normalize the spectra, and output a single Excel file for easy plotting and anaysis.
+plot/normalize the spectra, and output a single Excel file for easy plotting and analysis.
 
     """)
 
