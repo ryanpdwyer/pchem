@@ -9,6 +9,7 @@ import combineCSVElectrochem
 import thermoFirstLaw
 import thermoCalorimeter
 import ace
+import kinetics
 import solartronData
 import thermoGas
 import impedance
@@ -74,6 +75,7 @@ apps = {"Combine UV-Vis Data": combineCSV,
         'Plot Excel Data': plotExcel,
         "Plot Solartron Data": solartronData,
         "1st Law of Thermodynamics": thermoFirstLaw,
+        "Kinetics - Ocean Optics": kinetics,
         "2nd Law Calorimeter": thermoCalorimeter,
         "Mystery Gas": thermoGas,
         "Where is Equilibrium?": entropySplit,
