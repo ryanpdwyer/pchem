@@ -9,7 +9,6 @@ import combineCSVElectrochem
 import thermoFirstLaw
 import thermoCalorimeter
 import ace
-import openai_ex
 import solartronData
 import thermoGas
 import impedance
@@ -79,8 +78,7 @@ apps = {"Combine UV-Vis Data": combineCSV,
         "Mystery Gas": thermoGas,
         "Where is Equilibrium?": entropySplit,
         "Sympy Shell": ace,
-        "Impedance": impedance,
-        "AI Demo": openai_ex
+        "Impedance": impedance
 }
 
 app = st.selectbox("Choose an application:", list(apps.keys()))
