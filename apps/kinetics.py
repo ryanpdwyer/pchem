@@ -89,7 +89,7 @@ def sort_files_and_create_data(files, sort_files):
 
 @st.cache
 def create_data_dict(filenames, data):
-    files_dict = defaultdict(lambda : dict(times=[], data=[]))
+    files_dict = defaultdict(lambda : dict(times=[], data=[], number=[], time=[]))
     # df_all = pd.DataFrame()
     for filename, d in zip(filenames, data):
         dataname, number, time = filename[1].split('__')
@@ -101,6 +101,8 @@ def create_data_dict(filenames, data):
         dict_entry = files_dict[dataname_short]
         dict_entry['times'].append(time)
         dict_entry['data'].append(d)
+        dict_entry['number'].append(number)
+        dict_entry['time'].append(f'{hr}:{min_}:{sec}.{msec}')
     return files_dict
 
 def run():
@@ -149,7 +151,7 @@ Use the boxes below to change the labels for each kinetics experiment.
         wavelength_bandwidth = st.number_input("Bandwidth", min_value=0.5, value=3.0)
 
         
-
+        # Assuming all have the same x axis data
         kinetics_mask = ((x_data > wavelength_monitor-wavelength_bandwidth/2) 
                         * (x_data < wavelength_monitor+wavelength_bandwidth/2))
         
@@ -162,15 +164,30 @@ Use the boxes below to change the labels for each kinetics experiment.
             times = times - times.min() # Times in seconds, relative to start of experiment 
             data = np.array([np.mean(d[y_column].values[kinetics_mask]) for d in val['data']])
 
-            dfs.append(pd.DataFrame.from_dict(dict(times=times, A=data, name=key), 
-                            orient='columns'))
+            dfs.append(
+                pd.DataFrame.from_dict({'Time (s)':times, 'A': data, 'name':key,
+                                                'wavelength': wavelength_monitor, 
+                                                'bandwidth': wavelength_bandwidth,
+                                                'number': val['number'],
+                                                'time': val['time']}, 
+                            orient='columns')
+            )
         
         df_kinetics = pd.concat(dfs, ignore_index=True)
+
+        df_kinetics['Time (min)'] = df_kinetics['Time (s)'] / 60.0
         st.write(df_kinetics)
+
         if plot_kinetics:
 
-            scatter = px.line(df_kinetics, x='times', y='A', color='name')
+            scatter = px.line(df_kinetics, x='Time (s)', y='A', color='name',
+            labels={'A': f'A @ {wavelength_monitor:.1f}±{wavelength_bandwidth/2} nm'})
             st.plotly_chart(scatter)
+
+            st.markdown("### Output options")
+            filename = st.text_input("Filename:", value="kinetics-data")
+            write_excel(df_kinetics, filename)
+
             
 
 
