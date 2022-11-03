@@ -5,6 +5,7 @@ import numpy as np
 import streamlit as st
 import combineCSV
 import combineRaman
+import combineEChemZip
 import combineCSVElectrochem
 import thermoFirstLaw
 import thermoCalorimeter
@@ -72,6 +73,7 @@ apps = {"Combine UV-Vis Data": combineCSV,
         "Combine Raman Data": combineRaman,
         "CHE 120 Kinetics": arrhen,
         "Combine CSV Electrochem": combineCSVElectrochem,
+        'Electrochemistry Peak Picking': combineEChemZip,
         'Plot Excel Data': plotExcel,
         "Plot Solartron Data": solartronData,
         "1st Law of Thermodynamics": thermoFirstLaw,
