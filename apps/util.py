@@ -4,6 +4,7 @@ import base64
 import pandas as pd
 import numpy as np
 import io
+import zipfile
 import tempfile
 import re
 from io import StringIO 
@@ -63,6 +64,12 @@ def process_file(f):
     else:
         raise NotImplementedError(f"Data loading not supported for file {f.name}")
     return data
+
+# def process_file_zip(f):
+#     data = None
+#     if f.name.endswith("zip"):
+        
+
 
 
 class Enlighten_Data:

@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import zipfile
+import glob
 import io
 import base64
 from scipy import signal
@@ -49,7 +51,7 @@ def limit_x_values(data, x_column, settings):
         data_out.append(df[mask])
     return data_out, settings
 
-scales = {'A': 1, 'mA': 1e3, 'µA': 1e6}
+scales = {'A': 1, 'mA': 1e3, 'µA': 1e6, 'nA': 1e9}
 
 def scale_current(data, y_column, settings):
     st.markdown("### Scale Current")
@@ -95,8 +97,30 @@ for easy plotting; it is designed to work with the structured CSV files generate
 
     """)
 
-    files = st.file_uploader("Upload CSV, excel, or Aftermath zip files",
+    files = st.file_uploader("Upload CSV or excel files",
                 accept_multiple_files=True)
+
+    st.markdown("### Zip file upload")
+    zip_file_upload = st.file_uploader("Upload Zip file of Aftermath exports",
+                accept_multiple_files=False)
+
+    if zip_file_upload is not None:
+        st.write("Processing zip file...")
+        zip_file = zipfile.ZipFile(zip_file_upload)
+        zip_filenames = zip_file.namelist()
+        zip_experiment_folders = np.array([x for x in zip_filenames if 'Experiment' in x and x.endswith('/')])
+        zip_experiment_folder_depths = np.array([x.count('/') for x in zip_experiment_folders])
+        expt_depth = zip_experiment_folder_depths.min()
+        zip_experiment_folder_names = zip_experiment_folders[zip_experiment_folder_depths == expt_depth]
+
+        zip_experiment_folder_prefix = [x.split('/')[0] for x in zip_experiment_folder_names]
+        zip_experiment_folder_prefix = np.unique(zip_experiment_folder_prefix)
+        for prefix in zip_experiment_folder_prefix:
+            st.write(f"Archive: {prefix}")
+            folder_names_without_prefix = [x.replace(prefix+'/', '') for x in zip_experiment_folder_names]
+            st.write(folder_names_without_prefix)
+                
+
 
 
     if files:

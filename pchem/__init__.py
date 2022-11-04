@@ -6,6 +6,8 @@ import operator
 
 import sympy as sm
 import numpy as np
+from munch import Munch
+from scipy import stats
 import pandas as pd
 
 try:
@@ -121,6 +123,33 @@ def getprop(gas, prop, P=None, T=None, **kwargs):
         else:
             return CP.PropsSI(prop, *args)
 
+
+def regression(x, y):
+    """Performs a linear regression (using scipy.stats.linregress), 
+    compute proper confidence intervals for the slope (slope_95) and intercept (intercept_95),
+    and compute the residuals.
+    
+    """
+    # Linear regression
+    r = stats.linregress(x, y)
+    results = Munch(slope=r.slope, intercept=r.intercept,
+                    stderr=r.stderr, intercept_stderr=r.intercept_stderr,
+                    rvalue=r.rvalue, pvalue=r.pvalue)
+    # T-value to convert from standard error to confidence interval 
+    # (0.05 means 1 - 0.05 = 95% interval)
+    ts = tinv(0.05, len(x) - 2) # Degrees of freedom
+    
+    # Uncertainties...
+    results.slope_95 = results.stderr * ts
+    results.intercept_95 = results.intercept_stderr * ts
+
+    results.predict = lambda x: x * results.slope + results.intercept
+    results.y_predicted = results.predict(x)
+    results.x = x
+    results.y = y
+    results.residual = results.y - results.y_predicted
+    
+    return results
 
 
 def getprop_dens(gas, prop, density, T=298.15):
