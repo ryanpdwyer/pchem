@@ -13,6 +13,20 @@ from scipy import signal
 from util import process_file
 
 
+def set_x_limit(ax):
+    if ax:
+        x_min_val, x_max_val = ax.get_xlim()
+        x_min = st.number_input("Choose minimum x:", value=x_min_val)
+        x_max = st.number_input("Choose maximum x:", value=x_max_val)
+        ax.set_xlim(x_min, x_max)
+
+def set_y_limit(ax):
+    if ax:
+        y_min_val, y_max_val = ax.get_ylim()
+        y_min = st.number_input("Choose minimum y:", value=y_min_val)
+        y_max = st.number_input("Choose maximum y:", value=y_max_val)
+        ax.set_ylim(y_min, y_max)
+
 def limit_cycles(data, settings):
     max_val = 1
     if all('Segment' in df for df in data):
@@ -217,6 +231,8 @@ Use the boxes below to change the labels for each line that will go on the graph
             else:
                 ax.set_xlabel(x_label)
                 ax.set_ylabel(y_label)
+                set_x_limit(ax)
+                set_y_limit(ax)
                 ax.legend()
                 st.pyplot(fig)
             
