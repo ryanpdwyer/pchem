@@ -10,6 +10,28 @@ import base64
 from util import process_file
 
 
+def limit_cycles(data, settings):
+    max_val = 1
+    if all('Segment' in df for df in data):
+        st.markdown("## Limit Segments")
+        max_val = max([max(df['Segment'].values) for df in data])
+        st.write(max_val)
+    else:
+        return data, settings
+
+    segment_min, segment_max = st.slider("Included Segments:", min_value=1, max_value=int(max_val), value=[1, int(max_val)], step=1)
+
+    settings['segment_min'] = segment_min
+    settings['segment_max'] = segment_max
+
+    data_out = []
+    for df in data:
+        mask = (df['Segment'].values >= segment_min) * (df['Segment'].values <= segment_max)
+        data_out.append(df[mask])
+    
+    return data_out, settings
+
+
 def limit_x_values(data, x_column, settings):
     st.markdown("### Limit x Range")
     x_min = st.number_input("Choose minimum x:", value=min([min(df[x_column].values) for df in data]))
@@ -106,6 +128,7 @@ Use the boxes below to change the labels for each line that will go on the graph
         if data is not None:
 
             data, settings = limit_x_values(data, x_column, settings)
+            data, settings = limit_cycles(data, settings)
             data, settings = scale_current(data, y_column, settings)
             data, settings = shift_x_axis(data, x_column, settings)
 
@@ -125,7 +148,6 @@ Use the boxes below to change the labels for each line that will go on the graph
 
             y_label_default = f"{y_column} ({settings['y_scale']})"
 
-
             st.markdown("### Plotting options")    
             x_label = st.text_input("x-axis label: ", value=x_column)
             y_label = st.text_input('y-axis label: ', value=y_label_default)
@@ -144,8 +166,7 @@ Use the boxes below to change the labels for each line that will go on the graph
                 st.pyplot(fig)
 
             # # Saving
-            # st.markdown("### Output options")
-            # st.write(combined_data)
+            # st.markdown("### Save data")
             # filename = st.text_input("Filename:", value="data")
             # write_excel(combined_data, filename)
 
