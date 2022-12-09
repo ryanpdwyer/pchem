@@ -16,6 +16,7 @@ def set_x_limit(ax):
     x_max = st.number_input("Choose maximum x:", value=x_max_val)
     ax.set_xlim(x_min, x_max)
 
+
 def set_y_limit(ax):
     y_min_val, y_max_val = ax.get_ylim()
     y_min = st.number_input("Choose minimum y:", value=y_min_val)

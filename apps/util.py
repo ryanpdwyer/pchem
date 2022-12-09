@@ -126,3 +126,4 @@ def write_excel(df, filename, label="Download Excel file"):
     b64 = base64.b64encode(towrite.read()).decode()  # some strings
     linko = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}.xlsx">{label}</a>'
     st.markdown(linko, unsafe_allow_html=True)
+
