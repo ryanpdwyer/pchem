@@ -8,12 +8,46 @@ import sympy as sm
 import numpy as np
 from munch import Munch
 from scipy import stats
+from scipy.integrate import quad
 import pandas as pd
 
 try:
     import CoolProp.CoolProp as CP
 except:
     pass
+
+
+def nintegrate(integrand, var_limits):
+    """A version of sympy's integrate function that performs numerical integration.
+    var_limits contains the variable x, lower_limit x_lower, and upper_limit x_upper
+    (x, x_lower, x_upper)
+    
+    Returns ∫ integrand dx from x_lower to x_upper.
+    
+    Example:
+    
+    import sympy as sm
+    x = sm.symbols('x')
+    
+    integral = nintegrate(sm.sin(x)/(1+x**2), (x, 0, 1))
+    print(integral)
+    0.32179
+    """
+    var, lower, upper = var_limits
+    f = sm.lambdify(var, integrand, 'numpy')
+    return quad(f, lower, upper)[0]
+
+def vectorize(expr, var, var_array):
+    """Pass an entire vector to a sympy expression; for example,
+    
+    x = sm.sybmols('x')
+    x_vector = np.array([0.0, 1.0, 2.0, 3.0])
+    vectorize(x**2 - 1, x, x_vector)
+    
+    The final command should return `array([-1.0, 0.0, 3.0, 8.0])`.
+    
+    """
+    return sm.lambdify(var, expr, 'numpy')(var_array)
 
 
 class Solve:
