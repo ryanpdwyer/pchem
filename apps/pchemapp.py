@@ -15,6 +15,8 @@ import solartronData
 import thermoGas
 import impedance
 import entropySplit
+import variational
+import variational_gaussian
 import plotExcel
 import arrhen
 
@@ -82,6 +84,8 @@ apps = {"Combine UV-Vis Data": combineCSV,
         "Mystery Gas": thermoGas,
         "Where is Equilibrium?": entropySplit,
         "Sympy Shell": ace,
+        "Variational Gaussian": variational_gaussian,
+        "Linear Variational": variational,
         "Impedance": impedance
 }
 

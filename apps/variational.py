@@ -52,7 +52,7 @@ x = np.linspace(0, L, 1001)
 
 
 def run():
-    st.title("Variational Method")
+    st.title("Linear Variational Method")
     with st.sidebar:
         N = st.slider("N", 1, 15, 1)
     if 'ns' not in st.session_state:
@@ -102,7 +102,7 @@ def run():
     df2 = pd.DataFrame({'N': Narray, 'Energy': Varray, 'T': Tarray, 'type': 'Potential'})
     df = df.append(df2)
 
-    f2 = px.line(df, x='N', y='Energy', color='type', symbol='type')
+    f2 = px.line(df, x='N', y='Energy', color='type', symbol='type', hover_data='T')
     # Add scatter plot markers to points at the same location
     st.plotly_chart(f2)
 
