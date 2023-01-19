@@ -30,6 +30,12 @@ def Tmat(N):
 def V_el(i, j):
     return quad(lambda x: psi_pib(x, i)*V(x)*psi_pib(x, j), 0, L)[0]
 
+
+
+def C_el(i, j):
+    return quad(lambda x: psi_pib(x, i)*psi_pib(x, j), 0, L)[0]
+
+
 def Hmat_element(i, j):
     if i == j:
         return T(i) + V_el(i, j)
@@ -40,7 +46,10 @@ def Hmat(N):
     return np.array([[Hmat_element(i, j) for i in range(1, N+1)] for j in range(1, N+1)])
 
 
-# Persist state across reruns
+
+x = np.linspace(0, L, 1001)
+
+
 
 def run():
     st.title("Variational Method")
@@ -53,10 +62,13 @@ def run():
     if 'energiesT' not in st.session_state:
         st.session_state.energiesT = []
     H3 = Hmat(N)
-    x = np.linspace(0, L, 1001)
+
+    
     psi_n = np.array([psi_pib(x,i) for i in range(1, N+1)])
+
     eigs, vecs = linalg.eigh(H3)
     cn = vecs[:,0]/np.sign(vecs[0,0])
+
     if N not in st.session_state.ns:
         st.session_state.energies.append(eigs[0])
         st.session_state.ns.append(N)

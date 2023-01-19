@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pchem',
-      version='0.2',
+      version='0.3',
       description='Physical Chemistry helper functions, scripts and tools.',
       url='https://github.com/ryanpdwyer/pchem',
       author='Ryan Dwyer',
