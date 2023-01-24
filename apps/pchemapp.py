@@ -17,6 +17,8 @@ import impedance
 import entropySplit
 import plotExcel
 import arrhen
+import random_electrons
+import zeff
 
 import socket
 import copy
@@ -69,7 +71,9 @@ logging.info(f"Start Script - id: "+_get_session())
 
 st.title("Physical Chemistry Tools")
 
-apps = {"Combine UV-Vis Data": combineCSV, 
+apps = {"Zeff": zeff,
+    "Electron Visualization": random_electrons,
+"Combine UV-Vis Data": combineCSV, 
         "Combine Raman Data": combineRaman,
         "CHE 120 Kinetics": arrhen,
         "Combine CSV Electrochem": combineCSVElectrochem,
