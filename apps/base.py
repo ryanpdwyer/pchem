@@ -246,4 +246,4 @@ AtomicNumber,Element,Symbol,AtomicMass,NumberofNeutrons,NumberofProtons,Numberof
 118,Oganesson,Og,294,176,118,118,7,18,artificial,yes,,,yes,,Noble Gas,,,,,,,,,2006,,7,8
 """
 
-elements_df = pd.read_csv(StringIO(elements_string), index_col=0)
+elements_df = pd.read_csv(StringIO(elements_string))
