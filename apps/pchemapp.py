@@ -15,6 +15,8 @@ import solartronData
 import thermoGas
 import impedance
 import entropySplit
+import variational
+import variational_gaussian
 import plotExcel
 import arrhen
 import random_electrons
@@ -86,6 +88,8 @@ apps = {"Zeff": zeff,
         "Mystery Gas": thermoGas,
         "Where is Equilibrium?": entropySplit,
         "Sympy Shell": ace,
+        "Variational Gaussian": variational_gaussian,
+        "Linear Variational": variational,
         "Impedance": impedance
 }
 

@@ -30,6 +30,12 @@ def Tmat(N):
 def V_el(i, j):
     return quad(lambda x: psi_pib(x, i)*V(x)*psi_pib(x, j), 0, L)[0]
 
+
+
+def C_el(i, j):
+    return quad(lambda x: psi_pib(x, i)*psi_pib(x, j), 0, L)[0]
+
+
 def Hmat_element(i, j):
     if i == j:
         return T(i) + V_el(i, j)
@@ -40,10 +46,13 @@ def Hmat(N):
     return np.array([[Hmat_element(i, j) for i in range(1, N+1)] for j in range(1, N+1)])
 
 
-# Persist state across reruns
+
+x = np.linspace(0, L, 1001)
+
+
 
 def run():
-    st.title("Variational Method")
+    st.title("Linear Variational Method")
     with st.sidebar:
         N = st.slider("N", 1, 15, 1)
     if 'ns' not in st.session_state:
@@ -53,10 +62,13 @@ def run():
     if 'energiesT' not in st.session_state:
         st.session_state.energiesT = []
     H3 = Hmat(N)
-    x = np.linspace(0, L, 1001)
+
+    
     psi_n = np.array([psi_pib(x,i) for i in range(1, N+1)])
+
     eigs, vecs = linalg.eigh(H3)
     cn = vecs[:,0]/np.sign(vecs[0,0])
+
     if N not in st.session_state.ns:
         st.session_state.energies.append(eigs[0])
         st.session_state.ns.append(N)
@@ -90,7 +102,7 @@ def run():
     df2 = pd.DataFrame({'N': Narray, 'Energy': Varray, 'T': Tarray, 'type': 'Potential'})
     df = df.append(df2)
 
-    f2 = px.line(df, x='N', y='Energy', color='type', symbol='type')
+    f2 = px.line(df, x='N', y='Energy', color='type', symbol='type', hover_data='T')
     # Add scatter plot markers to points at the same location
     st.plotly_chart(f2)
 
