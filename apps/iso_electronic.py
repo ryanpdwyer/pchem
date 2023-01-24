@@ -11,7 +11,7 @@ from base import *
 def iso_electronic():
 
     H = dict(Z=1,e1s=1)
-    df = pd.read_csv("elements.csv")
+    df = elements_df
     element_symbols = dict(df.loc[:, ['AtomicNumber', 'Symbol']].values)
     symbol_Z = dict(df.loc[:, ['Symbol', 'AtomicNumber']].values)
 
