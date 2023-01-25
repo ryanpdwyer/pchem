@@ -137,7 +137,7 @@ def run():
     c = st.container()
     samps_per_e = st.slider("Samples per electron:", min_value=10, max_value=300,
                     value=100)
-                    
+    i_electron = 0                
     for shell, e_in_shell in shells.items():
         n_lower = sum(val for key, val in shells.items() if key < shell)
         Z_shell = Zeff(protons, n_lower, e_in_shell)
@@ -150,21 +150,41 @@ def run():
             p_rad = p_rad / sum(p_rad)
             cdf = np.cumsum(p_rad)
             mask = cdf < 0.999
-            rand = np.random.rand(samps_per_e*e_in_shell)
+            rand = np.random.rand(samps_per_e*e_in_subshell)
             r_values = np.interp(rand, cdf, r)
             dr = np.diff(r).mean()
-            theta_vals = np.random.rand(samps_per_e*e_in_shell)*2*np.pi
-            df = df.append(pd.DataFrame(dict(r=r[mask], p=p_rad[mask]/dr, n=shell, l=l_subshell, subshell=f"{shell}{subshell}")))
-            df2 = df2.append(pd.DataFrame(dict(x=np.cos(theta_vals)*r_values, y=np.sin(theta_vals)*r_values, r=np.round(r_values, 3), n=shell, l=l_subshell, subshell=f"{shell}{subshell}")))
-    
+            theta_vals = np.random.rand(samps_per_e*e_in_subshell)*2*np.pi
+            x = np.cos(theta_vals)*r_values
+            y = np.sin(theta_vals)*r_values
+            df = df.append(pd.DataFrame(dict(r=r[mask], p=p_rad[mask]/dr, cdf=cdf[mask], n=shell, l=l_subshell, subshell=f"{shell}{subshell}")))
+            df2 = df2.append(pd.DataFrame(dict(x=x, y=y, r=np.round(r_values, 3), n=shell, l=l_subshell, subshell=f"{shell}{subshell}", e_num=np.floor(i_electron+np.arange(samps_per_e*e_in_subshell)/samps_per_e))))
+            i_electron += e_in_subshell
     fig = px.line(df, x='r', y='p', color='subshell', line_group='subshell', hover_name='subshell')
     show_radial = c.checkbox('Show radial probability')
     if show_radial:
         c.plotly_chart(fig)
-    fig2 = px.scatter(df2, x='x', y='y', color='subshell', hover_name='subshell', hover_data=['r'], opacity=0.5, width=700, height=700)
+    fig2 = px.scatter(df2, x='x', y='y', color='subshell', hover_name='subshell', hover_data=['r', 'e_num'], opacity=0.5, width=700, height=700)
     fig2.update_yaxes(scaleanchor = "x", scaleratio = 1)
     fig2.update_traces(marker={'size': 5})
     c.plotly_chart(fig2)
+    pos = df2[['x', 'y']].values
+    n_electrons = protons - charge
+    pos_3d = pos.reshape(-1, 2, n_electrons)
+    st.write(pos)
+    st.write(pos_3d.shape)
+    all_r_values = []
+    for i in range(n_electrons):
+        curr_array = pos_3d[:, :, i]
+        curr_r = (curr_array**2).sum(axis=1)**0.5
+        dist = (pos_3d - curr_array.reshape(-1, 2, 1))[:, :, np.arange(n_electrons) != i]
+        r_values = (dist**2).sum(axis=1)**0.5
+        all_r_values.append(r_values)
+        V_n = 1/r_values
+        V_total = V_n.sum(axis=1) + -protons/curr_r
+        st.write(V_total.shape)
+        st.write(np.mean(V_total*curr_r))
+    print(all_r_values)
+    
         
 
 
