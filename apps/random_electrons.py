@@ -45,8 +45,11 @@ def subshell_electron_counts(n):
     return d
 
 def run():
+    if 'el_random_electron' not in st.session_state:
+        st.session_state.el_random_electron = 'C'
 
     H = dict(Z=1,e1s=1)
+
     df = elements_df
     element_symbols = dict(df.loc[:, ['AtomicNumber', 'Symbol']].values)
     symbol_Z = dict(df.loc[:, ['Symbol', 'AtomicNumber']].values)
@@ -105,12 +108,9 @@ def run():
 
         for i, button in enumerate(el_fired):
             if button:
-                element = symbols[i]
-                with open('el.json', 'w') as f:
-                    json.dump(dict(el=element), f)
+                st.session_state.el_random_electron = symbols[i]
         
-        with open('el.json', 'r') as f:
-            element = json.load(f)['el']
+        element = st.session_state.el_random_electron
     else:
         element = st.selectbox('Element', options=list(element_symbols.values()))
 

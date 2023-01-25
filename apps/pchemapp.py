@@ -71,7 +71,7 @@ startTime = time.time_ns()/1e6
 logging.info(f"Start Script - id: "+_get_session())
 
 
-st.title("Physical Chemistry Tools")
+st.title("Chemistry Tools")
 
 apps = {"Zeff": zeff,
     "Electron Visualization": random_electrons,

@@ -9,7 +9,9 @@ from string import Template
 from base import *
 
 def iso_electronic():
-
+    if 'el_iso' not in st.session_state:
+        st.session_state.el_iso = 'F'
+    
     H = dict(Z=1,e1s=1)
     df = elements_df
     element_symbols = dict(df.loc[:, ['AtomicNumber', 'Symbol']].values)
@@ -59,12 +61,11 @@ def iso_electronic():
     for i, button in enumerate(el_fired):
         if button:
             element = list(charges.keys())[i]
-            with open('el-2.json', 'w') as f:
-                json.dump(dict(el=element), f)
+            st.session_state.el_iso = element
 
-    with open('el-2.json', 'r') as f:
-        element = json.load(f)['el']
-        charge = charges[element]
+
+    element = st.session_state.el_iso
+    charge = charges[element]
 
 
     protons = symbol_Z[element]
@@ -80,6 +81,10 @@ def iso_electronic():
 
 
     fig, ax = plt.subplots(figsize=(4,4))
+    for i, (orbital, color) in enumerate(colors.items()):
+        if i <= 2:
+            ax.plot(0,0, '.', markersize=8, color=color, label=orbital, zorder=-10-i)
+    
     lims = 1.4
     ax.set_xlim(-lims,lims)
     ax.set_ylim(-lims,lims)
@@ -102,8 +107,6 @@ def iso_electronic():
     for circle in circles:
         ax.add_artist(circle)
 
-    for orbital, color in colors.items():
-        ax.plot(0,0, 'o', color=color, label=orbital)
     ax.text(0,0,'+'+str(protons), ha='center', va='center', color='1', fontsize=8)
     ax.legend()
     st.write(fig)

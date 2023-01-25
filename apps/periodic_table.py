@@ -10,6 +10,9 @@ from base import *
 
 def periodic_table():
 
+    if 'el_periodic' not in st.session_state:
+        st.session_state.el_periodic = 'C'
+
     H = dict(Z=1,e1s=1)
     df = elements_df
     element_symbols = dict(df.loc[:, ['AtomicNumber', 'Symbol']].values)
@@ -69,12 +72,13 @@ def periodic_table():
 
         for i, button in enumerate(el_fired):
             if button:
-                element = symbols[i]
-                with open('el.json', 'w') as f:
-                    json.dump(dict(el=element), f)
+                st.session_state.el_periodic = symbols[i]
+            
+        element = st.session_state.el_periodic
+
+
         
-        with open('el.json', 'r') as f:
-            element = json.load(f)['el']
+
     else:
         element = st.selectbox('Element', options=list(element_symbols.values()))
 
@@ -93,6 +97,11 @@ def periodic_table():
 
 
     fig, ax = plt.subplots(figsize=(4,4))
+    for i, (orbital, color) in enumerate(colors.items()):
+        # Only plot s, p, d subshell labels
+        if i <= 2:
+            ax.plot(0,0, '.', markersize=8, color=color, label=orbital, zorder=-10-i)
+    
     lims = 1.4
     ax.set_xlim(-lims,lims)
     ax.set_ylim(-lims,lims)
@@ -114,9 +123,8 @@ def periodic_table():
 
     for circle in circles:
         ax.add_artist(circle)
-    for orbital, color in colors.items():
-        ax.plot(0,0, 'o', color=color, label=orbital, zorder=-10)
     
+
     ax.text(0,0,'+'+str(protons), ha='center', va='center', color='1', fontsize=8)
     ax.legend()
     st.write(fig)
