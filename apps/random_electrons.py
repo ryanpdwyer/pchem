@@ -164,6 +164,11 @@ def run():
     fig2 = px.scatter(df2, x='x', y='y', color='subshell', hover_name='subshell', hover_data=['r'], opacity=0.5, width=700, height=700)
     fig2.update_yaxes(scaleanchor = "x", scaleratio = 1)
     fig2.update_traces(marker={'size': 5})
+    # Find the 0.90 percentile of the radial distribution for each subshell using a pandas groupby
+    # and then plot a circle with that radius
+    df2['r'] = df2['r'].astype(float)
+    df3 = df2.groupby('subshell')['r'].quantile(0.90).reset_index().rename(columns={'r': 'r90'})
+    st.write(df3)
     c.plotly_chart(fig2)
         
 
