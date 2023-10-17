@@ -10,6 +10,7 @@ import combineCSVElectrochem
 import thermoFirstLaw
 import thermoCalorimeter
 import ace
+import compressibility
 import kinetics
 import solartronData
 import thermoGas
@@ -88,6 +89,7 @@ apps = {"Zeff": zeff,
         "Mystery Gas": thermoGas,
         "Where is Equilibrium?": entropySplit,
         "Sympy Shell": ace,
+        "Compressibility Factor": compressibility,
         "Variational Gaussian": variational_gaussian,
         "Linear Variational": variational,
         "Impedance": impedance
