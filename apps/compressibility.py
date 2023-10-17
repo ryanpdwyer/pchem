@@ -73,6 +73,10 @@ df = pd.read_csv(data, names=["P1000", "Z1000", "P200", "Z200",  "P500", "Z500"]
 def run():
 
     st.markdown("""# Compressibility factor
+Experimental data and predictions from the van der Waals equation are shown below. The van der Waals equation is given by:
+
+$$P = RT/(\\bar{V}-b) - a/\\bar{V}^2$$
+
 """)
     
     a_default = 1.35
