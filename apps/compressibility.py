@@ -9,6 +9,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import optimize
 import streamlit as st
 from matplotlib.patches import Rectangle
 from numpy.lib.function_base import interp
@@ -83,14 +84,20 @@ $$P = RT/(\\bar{V}-b) - a/\\bar{V}^2$$
     b_default = 0.032
     R = 0.083145
 
-    a = st.number_input("a (bar L² mol⁻²)", value=a_default, step=0.01)
+    if st.checkbox("Use number inputs instead of sliders"):
 
-    b= st.number_input("b (L mol⁻¹)", value=b_default, step=0.001, format="%.3f")
+        a = st.number_input("a (bar L² mol⁻²)", value=a_default, step=0.01)
+        b= st.number_input("b (L mol⁻¹)", value=b_default, step=0.001, format="%.3f")
+    else:
+        a = st.slider("a (bar L² mol⁻²)", min_value=0.01, max_value=10.0, value=a_default, step=0.01)
+        b = st.slider("b (L mol⁻¹)", min_value=0.001, max_value=0.1, value=b_default, step=0.001, format="%.3f")
 
+
+    
     # st.write(f"Critical temperature: {8*a/(27*R*b)} K")
     # st.write(df)
-    Vbar = np.geomspace(0.1, 100, 1001)
-    P_guess = np.geomspace(0.1, 900, 500)
+    # Vbar = np.geomspace(0.1, 100, 1001)
+    P_guess = np.geomspace(0.1, 1200, 1001)
     V200 = R*200/P_guess
     V500 = R*500/P_guess
     V1000 = R*1000/P_guess
@@ -110,8 +117,9 @@ $$P = RT/(\\bar{V}-b) - a/\\bar{V}^2$$
     for T in temperatures:
         V = R*T/P_guess
         P = vdW(V, T, a, b)
-        m = (P < 900) & (P > 0.01)
-        line, = ax.plot(df['P'+str(T)].dropna().values*1/1.0135, df['Z'+str(T)].dropna().values, '.-', label=f"{T} K")
+        P_plot = df['P'+str(T)].dropna().values*1/1.0135
+        m = (P < P_plot.max()) & (P > 0.01)
+        line, = ax.plot(P_plot, df['Z'+str(T)].dropna().values, '.-', label=f"{T} K")
         ax.plot(P[m], P[m]/P_guess[m], '--',  color=line.get_markerfacecolor())
     
     ax.legend()
@@ -121,6 +129,15 @@ $$P = RT/(\\bar{V}-b) - a/\\bar{V}^2$$
     ax.set_ylabel("Compressibility factor $Z=\\frac{PV}{nRT}$")
 
     with placeholder:
+        if st.button("Fit to data"):
+            temp = temperatures[0]
+            P_fit = df['P'+str(T)].dropna().values*1/1.0135
+            Z_fit = df['Z'+str(T)].dropna().values
+            V_fit = R*temp/P_fit*Z_fit
+            
+            popt, pcov = optimize.curve_fit(lambda V, a, b: vdW(V, temp, a, b)/ig(V, temp), V_fit, Z_fit, p0=[a, b])
+            st.write("Best fit parameters:")
+            st.write(dict(a=popt[0], b=popt[1]))
         st.pyplot(fig)
         st.markdown("""\
 The dotted lines show the van der Waals equation of state prediction and the solid line with points shows the experimental data. Select the other data sets using the box below.
