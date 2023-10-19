@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import streamlit as st
 import io
+from scipy import signal
 import base64
 from util import find, write_excel, process_raman
 
@@ -68,6 +69,35 @@ def normalize_data(combined_data, x_column, settings):
 def check_nans(df, col, threshold=0.5):
     return df[col].isna().sum() / len(df) > threshold
 
+
+def derivative(data, y_column, x_column, settings):
+
+    st.markdown("""### Peak picking settings
+The peak smoothing parameter can be adjusted to minimize false positives and help the peak picking algorithm find a single peak.
+    """)
+    dV_peak = st.number_input("Peak smoothing (x-axis units)", value=2.0)
+    settings['dx_peak'] = dV_peak
+
+
+    for df in data:
+        dV = np.mean(np.abs(np.gradient(df[x_column].values)))
+        window = signal.get_window('triang', np.round(dV_peak/dV).astype(int))
+        y = df[y_column].values
+        df['y_norm'] = y_norm =  y/abs(y).max()
+        dy = signal.convolve(np.gradient(y_norm), window, mode='same')
+        df['dy'] = dy
+
+        # Zero crossings
+        inds = np.where(np.diff(np.sign(dy)))[0]
+        peaks = np.zeros_like(y, dtype=bool)
+        peaks[inds] = True
+        df["Peak"] = peaks
+
+    
+
+    return data, settings
+
+
 def run():
     df = None
     cols = None
@@ -115,10 +145,27 @@ Use the boxes below to change the labels for each line that will go on the graph
 
             submitted = st.form_submit_button()
 
-        
+
         st.session_state.ever_submitted = submitted | st.session_state.ever_submitted
         
         if st.session_state.ever_submitted:
+            
+            peak_list = None
+
+            if st.checkbox("Pick peaks?"):
+
+                data, settings = derivative(data, y_column, x_column, settings)
+
+                peak_list = [df[df['Peak']].loc[:, [x_column, y_column, 'y_norm']] for df in data]
+
+                # Allow peak list to be modified - set a threshold for height, for example...
+
+                height_threshold = st.slider("Peak height threshold", value=0.05, min_value=0.0, max_value=0.9)
+
+                for df in peak_list:
+                    df.drop(df[df['y_norm'] < height_threshold].index, inplace=True)
+        
+                st.write(peak_list)
 
             if check_nans(data[0], x_column):
                 st.markdown(f"Column `{x_column}` seems to be missing data; try selecting another column for the x-axis and **Submit** again.")
@@ -150,11 +197,21 @@ Use the boxes below to change the labels for each line that will go on the graph
             if use_plotly:
                 plotly_fig = px.line(combined_data, x=x_column, y=combined_data.columns[1:],
                         labels={'value': y_label, x_column: x_label})
+                
+                if peak_list is not None:
+                    for df, label in zip(peak_list, labels):
+                        plotly_fig.add_trace(px.scatter(df, x=x_column, y=y_column).data[0])
+    
                 st.plotly_chart(plotly_fig)
             else:
                 fig, ax = plt.subplots()
                 for col, fname, label in zip(combined_data.values[:, 1:].T, filenames, labels):
                     ax.plot(x_data, col, label=label)
+                
+                if peak_list is not None:
+                    for df, label in zip(peak_list, labels):
+                        ax.plot(df[x_column], df[y_column], 'o', label=f"{label} peaks")
+                
                 ax.set_xlabel(x_label)
                 ax.set_ylabel(y_label)
                 ax.legend()
