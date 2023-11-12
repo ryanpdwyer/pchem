@@ -158,6 +158,12 @@ def getprop(gas, prop, P=None, T=None, **kwargs):
             return CP.PropsSI(prop, *args)
 
 
+# Two-sided inverse Students t-distribution
+# p - probability, df - degrees of freedom
+from scipy.stats import t
+tinv = lambda p, df: abs(t.ppf(p/2, df))
+
+
 def regression(x, y):
     """Performs a linear regression (using scipy.stats.linregress), 
     compute proper confidence intervals for the slope (slope_95) and intercept (intercept_95),
