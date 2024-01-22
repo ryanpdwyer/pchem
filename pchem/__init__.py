@@ -37,6 +37,7 @@ def nintegrate(integrand, var_limits):
     f = sm.lambdify(var, integrand, 'numpy')
     return quad(f, lower, upper)[0]
 
+
 def vectorize(expr, var, var_array):
     """Pass an entire vector to a sympy expression; for example,
     
@@ -108,6 +109,7 @@ class Solve:
         return out
 
 solve = Solve() # Instantiate the class...
+
 
 def getprop(gas, prop, P=None, T=None, **kwargs):
     """For a gas, get a thermodynamic property at a given pressure and temperature.
@@ -220,6 +222,7 @@ def _flatten(a):
     return functools.reduce(operator.iconcat, a, [])
 
 
+
 def getprop_df(gas, prop, P, T):
     """Get a gas property as a dataframe.
     
@@ -266,7 +269,12 @@ def getprops_df(gas, props, P, T):
     Returns
     -------
     pandas.DataFrame
-        The dataframe with the given property initial conditions and properties.
+        The dataframe with the given property, initial conditions, and properties.
+
+    Example
+    -------
+    >>> getprops_df('CO2', ['Smolar', 'Umolar', 'Vmolar'], P=[1, 2], T=[300, 400])
+
     """
     P = np.array(P).reshape(-1) # Make sure it's a 1D array
     T = np.array(T).reshape(-1) # Make sure it's a 1D array

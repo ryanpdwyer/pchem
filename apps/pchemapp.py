@@ -4,7 +4,7 @@ import time
 import numpy as np
 import streamlit as st
 import combineCSV
-import neuralnetwork
+# import neuralnetwork
 import combineRaman
 import combineEChemZip
 import combineCSVElectrochem
@@ -76,7 +76,7 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Chemistry Tools")
 
 apps = {
-     "Neural Network Game": neuralnetwork,
+    #  "Neural Network Game": neuralnetwork,
      "Zeff": zeff,
     "Electron Visualization": random_electrons,
 "Combine UV-Vis Data": combineCSV, 
