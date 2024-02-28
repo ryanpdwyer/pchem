@@ -87,9 +87,9 @@ def run():
     
     correct_A = np.exp(12.07)
 
-    if A_response != 0.0 and abs(A_response-correct_A) > 1e4:
+    if A_response != 0.0 and abs(A_response-correct_A) > 0.2e4:
         st.write("Incorrect. Try again.")
-    elif abs(A_response-correct_A) < 0.2e4:
+    elif abs(A_response-correct_A) <= 0.2e4:
         st.write("Correct!")
 
 if __name__ == '__main__':

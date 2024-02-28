@@ -77,11 +77,11 @@ st.title("Chemistry Tools")
 
 apps = {
     #  "Neural Network Game": neuralnetwork,
-     "Zeff": zeff,
+    "CHE 120 Kinetics": arrhen,
     "Electron Visualization": random_electrons,
 "Combine UV-Vis Data": combineCSV, 
         "Combine Raman Data": combineRaman,
-        "CHE 120 Kinetics": arrhen,
+             "Zeff": zeff,
         "Combine CSV Electrochem": combineCSVElectrochem,
         'Electrochemistry Peak Picking': combineEChemZip,
         'Plot Excel Data': plotExcel,
