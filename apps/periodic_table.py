@@ -124,7 +124,7 @@ def periodic_table():
     for shell, e_in_shell in shells.items():
         n_lower = sum(val for key, val in shells.items() if key < shell)
         Z_shell = Zeff(protons, n_lower, e_in_shell)
-        Z_shell_simple = protons - n_lower - (e_in_shell)/2.0
+        Z_shell_simple = protons - n_lower - (e_in_shell-1)/2.0
         Zeff_dict[shell] = Z_shell_simple
         n_electron = 0
         if e_in_shell > 0:

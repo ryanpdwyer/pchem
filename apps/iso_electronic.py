@@ -70,14 +70,23 @@ def iso_electronic():
 
     protons = symbol_Z[element]
     e_config = get_e_config(protons, charge)
+    e_config_no_zeros = {key: val for key, val in e_config.items() if val != 0}
     shells = n_in_shell(e_config)
 
 
-    show_e_config = st.checkbox('Show e⁻ configuration')
+    col_e_config, col_Zeff, col_key = st.columns(3)
+    show_e_config = col_e_config.checkbox('Show e⁻ configuration')
+    show_Zeff = col_Zeff.checkbox('Show Zeff')
+    show_key = col_key.checkbox('Show subshell key')
+
+
+    empty = st.empty()
+
+
     if show_e_config:
-        st.markdown(write_e_config(protons, e_config, element_symbols))
+        initial_e_config_text = write_e_config(protons, e_config, element_symbols)
     else:
-        st.markdown(write_ion(protons, e_config, element_symbols))
+        initial_e_config_text = write_ion(protons, e_config, element_symbols)
 
 
     fig, ax = plt.subplots(figsize=(4,4))
@@ -92,10 +101,14 @@ def iso_electronic():
     circles = []
     circles.append(plt.Circle((0, 0), 0.1, color='g'))
 
+    Zeff_dict = {}
 
     for shell, e_in_shell in shells.items():
         n_lower = sum(val for key, val in shells.items() if key < shell)
         Z_shell = Zeff(protons, n_lower, e_in_shell)
+        Z_shell_simple = protons - n_lower - (e_in_shell-1)/2.0
+        Zeff_dict[shell] = Z_shell_simple
+
         n_electron = 0
         if e_in_shell > 0:
             circles.append(plt.Circle((0, 0), shell_r(shell, Z_shell), fc='none', linewidth=0.7, ec='0'))
@@ -108,5 +121,15 @@ def iso_electronic():
         ax.add_artist(circle)
 
     ax.text(0,0,'+'+str(protons), ha='center', va='center', color='1', fontsize=8)
-    ax.legend()
+    if show_key:
+        ax.legend()
+
     st.write(fig)
+
+    if show_Zeff:
+        n_max = max(int(x[0]) for x in e_config_no_zeros.keys())
+        Z_eff_str = f" &nbsp; &nbsp; with Z<sub>eff</sub>(n={n_max}) = {Zeff_dict[n_max]:.1f}"
+    else:
+        Z_eff_str = ''
+    
+    empty.markdown(initial_e_config_text+Z_eff_str, unsafe_allow_html=True)
