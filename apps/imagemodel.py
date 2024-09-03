@@ -7,15 +7,20 @@ import base64
 from openai import OpenAI
 import base64
 from io import BytesIO
+from dotenv import load_dotenv
+import os
 
 
+vars = load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 def encode_image(image):
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-client = OpenAI()
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_response(system, image):
         # Encode the image as a base64 string
