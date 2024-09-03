@@ -94,6 +94,61 @@ def write_e_config(protons, e_config, element_symbols):
 def Zeff(protons, n_lower, n_current):
     return protons - n_lower*0.9 - (n_current - 1)*0.4
 
+ell_dict  = dict(s=0, p=1, d=2, f=3)
+
+def slater_groups(e_config):
+    out = defaultdict(lambda : 0)
+    for key, val in e_config.items():
+        if key == '1s' or 'd' in key or 'f' in key:
+            out[key] = val
+        else:
+            out[key[0]+'sp'] += val
+    return out
+
+
+def shielding(slater_subshell, slater_config):
+    n = int(slater_subshell[0])
+    if slater_subshell == '1s':
+        return (slater_config['1s']-1) * 0.3
+    elif 'sp' in slater_subshell:
+        same_group = (slater_config[slater_subshell] - 1) 
+        n_2_lower = sum([j for (subshell, j) in slater_config.items() if int(subshell[0]) <= (n-2)])
+
+        n_1_lower = sum([j for (subshell, j) in slater_config.items() if int(subshell[0]) == (n-1)])
+
+        return same_group*0.35 + n_1_lower * 0.85 + n_2_lower
+    elif 'd' in slater_subshell:
+        same_group = (slater_config[slater_subshell] - 1) 
+        n_1_or_more_lower = sum(j for (subshell, j) in slater_config.items() if int(subshell[0]) <= (n-1))
+
+        same_n = sum([j for (subshell, j) in slater_config.items() if subshell in [f"{n}sp"]])
+
+        return same_group*0.35 + n_1_or_more_lower + same_n
+
+    elif 'f' in slater_subshell:
+        same_group = (slater_config[slater_subshell] - 1) 
+        n_2_lower = sum([j for (subshell, j) in slater_config.items() if int(subshell[0]) <= (n-2)])
+
+        n_1_lower = sum([j for (subshell, j) in slater_config.items() if int(subshell[0]) == (n-1)])
+
+        same_n = sum([j for (subshell, j) in slater_config.items() if subshell in [f"{n}sp", f"{n}d"]])
+        return same_group*0.35 + n_1_lower + n_2_lower + same_n
+
+    
+
+
+def Zeff_slater(protons, e_config):
+    # Strip any with zero electrons
+    e_config_safe = {key: val for key, val in e_config.items() if val > 0}
+
+    slater_config = slater_groups(e_config_safe)
+
+    return {key: protons - shielding(key, slater_config) for key in slater_config.keys()}
+
+    
+
+
+
 def max_n_in_shell(n):
     return 2 * n**2
 
@@ -247,3 +302,11 @@ AtomicNumber,Element,Symbol,AtomicMass,NumberofNeutrons,NumberofProtons,Numberof
 """
 
 elements_df = pd.read_csv(StringIO(elements_string))
+
+if __name__ == '__main__':
+    e1 = {'1s': 2, '2s': 2}
+    e2 = {'1s': 2, '2s': 2, '2p': 6, '3s': 2, '3p': 6, '4s': 2, '3d': 6}
+    for e in [e1, e2]:
+        p = sum(e.values())
+        print(slater_groups(e))
+        print(Zeff_slater(p, e_config=e))

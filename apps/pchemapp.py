@@ -4,6 +4,7 @@ import time
 import numpy as np
 import streamlit as st
 import combineCSV
+import imagemodel
 # import neuralnetwork
 import combineRaman
 import combineEChemZip
@@ -77,6 +78,7 @@ st.title("Chemistry Tools")
 
 apps = {
     #  "Neural Network Game": neuralnetwork,
+    "GPT-4o-mine": imagemodel,
     "CHE 120 Kinetics": arrhen,
     "Electron Visualization": random_electrons,
 "Combine UV-Vis Data": combineCSV, 
