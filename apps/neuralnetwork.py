@@ -23,15 +23,18 @@ For each model, your points will be calculated as follows:
                 
     Pts =(Max pts) - 3.5*(inputs + neurons) - (epochs)/100 - 1000*(test loss)
 
-Press R to refresh the leaderboard.
+The goal is to make your model work as well as possible while using the fewest resources (fewest neurons, inputs, and training epochs). Press R to refresh the leaderboard.
 
 The maximum points for each dataset are 50 for gaussian and xor, 75 for circle, and 250 for spiral.
          
-For full credit on the assignment, you should get at least **200 points.** The overall winner gets out of one of our upcoming homework assignments or gets to drop their lowest homework score.
+You should try to get at least **200 points.** The overall winner who hasn't gotten a skip before gets out of one of our upcoming homework assignments.
                 
 """)
     
     d = pd.DataFrame.from_dict(data, orient='index')
+    
+    # Filter out datasets that are not spiral, circle, xor, or gaussian
+    d = d.query('dataset == "spiral" or dataset == "circle" or dataset == "xor" or dataset == "gauss"')
 
     # Shorten the column names - the current names are
     # Timestamp
@@ -58,6 +61,7 @@ For full credit on the assignment, you should get at least **200 points.** The o
     max_values['score'].clip(lower=0, inplace=True)
 
 
+    
     
     pts_by_category = max_values['score'].reset_index().pivot(index='name', columns='dataset', values='score')
     
