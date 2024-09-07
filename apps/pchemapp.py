@@ -5,7 +5,7 @@ import numpy as np
 import streamlit as st
 import combineCSV
 import imagemodel
-# import neuralnetwork
+import neuralnetwork
 import combineRaman
 import combineEChemZip
 import combineCSVElectrochem
@@ -77,7 +77,7 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Chemistry Tools")
 
 apps = {
-    #  "Neural Network Game": neuralnetwork,
+    "Neural Network Game": neuralnetwork,
     "GPT-4o-mine": imagemodel,
     "CHE 120 Kinetics": arrhen,
     "Electron Visualization": random_electrons,
