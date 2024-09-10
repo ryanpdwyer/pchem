@@ -25,7 +25,7 @@ For each model, your points will be calculated as follows:
 
 The goal is to make your model work as well as possible while using the fewest resources (fewest neurons, inputs, and training epochs). Press R to refresh the leaderboard.
 
-The maximum points for each dataset are 50 for gaussian and xor, 75 for circle, and 250 for spiral.
+The maximum points for each dataset are 50 for gaussian, 75 for circle and xor, and 250 for spiral.
          
 You should try to get at least **200 points.** The overall winner who hasn't gotten a skip before gets out of one of our upcoming homework assignments.
                 

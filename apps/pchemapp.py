@@ -74,7 +74,7 @@ startTime = time.time_ns()/1e6
 logging.info(f"Start Script - id: "+_get_session())
 
 
-st.title("Chemistry Tools")
+st.title("Chemistry and FYS Tools")
 
 apps = {
     "Neural Network Game": neuralnetwork,

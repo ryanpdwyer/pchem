@@ -67,6 +67,9 @@ def run():
 
     if 'system' not in st.session_state:
         st.session_state.system = """Respond to an input image with either 'phone' or 'no phone' depending on whether the image contains a phone. Do not give any other response."""
+    
+    if 'cost' not in st.session_state:
+        st.session_state.cost = 0.0
 
     system = st.text_area("System prompt", """Respond to an input image with either 'phone' or 'no phone' depending on whether the image contains a phone. Do not give any other response.""")
 
@@ -75,7 +78,7 @@ def run():
     # Add a webcam stream to the app with a button to take a snapshot
     picture = st.camera_input("Take a picture")
 
-    # Resize the image to a standard size (224x224) using PIL
+    # Resize the image to a standard size (448x252) using PIL
     if picture is not None:
         img = Image.open(io.BytesIO(picture.read()))
         img = img.resize((448, 252))
@@ -94,21 +97,17 @@ def run():
         st.session_state.system = system
 
 
+    
     # Add a simple cost estimate - input tokens cost $0.15 per million tokens, output tokens cost $0.60 per million tokens
-
-
-
-
-        
         
     if response:
         st.write("Response:")
         st.write(response.choices[0].message.content)
 
-        st.write("Cost estimate:")
+        st.write("Total Cost estimate:")
+        st.session_state.cost += (response.usage.prompt_tokens*0.15 + response.usage.completion_tokens*0.6) / 1e4
 
-        st.write(f"Input tokens: {response.usage.prompt_tokens}")
-        st.write(f"Output tokens: {response.usage.completion_tokens}")
+        st.write(f"{st.session_state.cost:.4f} cents")
 
 
 if __name__ == "__main__":
