@@ -61,9 +61,9 @@ def run():
 
     response = None
 
-    st.title("Image classifier using GPT-4o-mini")
+    st.title("Image regression(?) using GPT-4o-mini")
 
-    st.write("Use the system prompt below to try zero-shot image classification. Try modifying the prompt to do something else too.")
+    st.write("Use the system prompt below to try to build a zero-shot regression model that places a circle over the image at a given point. Right now, it tries to find the position of the person's nose. Try modifying the prompt to do something else too.")
 
     if 'system' not in st.session_state:
         st.session_state.system = """Respond to an input image with the relative position of the tip of the person in the image's nose. Use the format (x, y) for your output, where x = 0 is the image's left edge, x = 100 is the image's right edge, y = 0 is the image's top edge, and y = 100 is the image's bottom edge. If there is no nose in the image, respond no nose. Do not give any other response."""

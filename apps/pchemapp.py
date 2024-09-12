@@ -78,6 +78,7 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Chemistry and FYS Tools")
 
 apps = {
+                 "Zeff": zeff,
     "Neural Network Game": neuralnetwork,
     "GPT-4o-mini Image Classifier": imagemodel,
     'GPT-4o-mini Image Regression': imagemodel_regression,
@@ -85,7 +86,6 @@ apps = {
     "Electron Visualization": random_electrons,
 "Combine UV-Vis Data": combineCSV, 
         "Combine Raman Data": combineRaman,
-             "Zeff": zeff,
         "Combine CSV Electrochem": combineCSVElectrochem,
         'Electrochemistry Peak Picking': combineEChemZip,
         'Plot Excel Data': plotExcel,
