@@ -15,6 +15,8 @@ def run():
 
     st.title("GPT-3 vs GPT-3.5 Chatbot Comparison")
 
+    st.markdown("GPT-3.5 models underwent instruction tuning and reinforcement learning through human feedback to improve their performance as interactive chatbots (this was the original free ChatGPT model). The GPT-3 model, on the other hand, was just pre-trained on predicting the next word in internet text. The base models are the same in both cases (both a knowledge cutoff of September 2021). ")
+
     # Function to generate response from GPT model
     def get_gpt_response(messages, model):
         if model == "davinci-002":
