@@ -70,7 +70,7 @@ def run():
                 st.session_state.right_messages.append({"role": "assistant", "content": right_response})
                 
                 st.session_state.initialized = True
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.warning("Please enter an initial prompt before sending.")
 
@@ -83,12 +83,12 @@ def run():
         for message in st.session_state.left_messages:
             st.write(f"{message['role'].capitalize()}: {message['content']}")
         
-        left_input = st.text_input("You (Left):", key="left_input", disabled=not st.session_state.initialized)
+        left_input = st.text_input("Left User:", key="left_input", disabled=not st.session_state.initialized)
         if st.button("Submit Left", disabled=not st.session_state.initialized):
             st.session_state.left_messages.append({"role": "user", "content": left_input})
             response = get_gpt_response(st.session_state.left_messages, "davinci-002")
             st.session_state.left_messages.append({"role": "assistant", "content": response})
-            st.rerun()
+            st.experimental_rerun()
 
     # Right chat (selectable GPT-3.5 model)
     with right_column:
@@ -96,12 +96,13 @@ def run():
         for message in st.session_state.right_messages:
             st.write(f"{message['role'].capitalize()}: {message['content']}")
         
-        right_input = st.text_input("You (Right):", key="right_input", disabled=not st.session_state.initialized)
+        right_input = st.text_input("Right User:", key="right_input", disabled=not st.session_state.initialized)
         if st.button("Submit Right", disabled=not st.session_state.initialized):
             st.session_state.right_messages.append({"role": "user", "content": right_input})
             response = get_gpt_response(st.session_state.right_messages, right_model)
             st.session_state.right_messages.append({"role": "assistant", "content": response})
-            st.rerun()
+            # Also reset the right chat input field to empty
+            st.experimental_rerun()
 
 
 if __name__ == "__main__":
