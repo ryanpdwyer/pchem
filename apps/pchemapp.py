@@ -4,6 +4,7 @@ import time
 import numpy as np
 import streamlit as st
 import combineCSV
+import openai_chat
 import imagemodel
 import imagemodel_regression
 import neuralnetwork
@@ -79,6 +80,7 @@ st.title("Chemistry and FYS Tools")
 
 apps = {
                  "Zeff": zeff,
+                 "GPT-3 vs ChatGPT": openai_chat,
     "Neural Network Game": neuralnetwork,
     "GPT-4o-mini Image Classifier": imagemodel,
     'GPT-4o-mini Image Regression': imagemodel_regression,
