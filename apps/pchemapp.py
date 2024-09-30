@@ -3,6 +3,7 @@ import logging
 import time
 import numpy as np
 import streamlit as st
+import mirpuzzle
 import combineCSV
 import openai_chat
 import imagemodel
@@ -79,6 +80,7 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Chemistry and FYS Tools")
 
 apps = {
+    "MIR Puzzle": mirpuzzle,
                  "Zeff": zeff,
                  "GPT-3 vs ChatGPT": openai_chat,
     "Neural Network Game": neuralnetwork,
