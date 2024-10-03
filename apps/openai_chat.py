@@ -59,8 +59,13 @@ def run():
             ["gpt-3.5-turbo-1106", "gpt-3.5-turbo-instruct", "gpt-3.5-turbo"]
         )
         
-        if st.button("Send Initial Message", disabled=st.session_state.initialized):
+        if st.button("Send Initial Message"):
             if initial_prompt:
+                # Clear any existing messages
+                st.session_state.left_messages = []
+                st.session_state.right_messages = []
+                
+
                 st.session_state.left_messages.append({"role": "user", "content": initial_prompt})
                 st.session_state.right_messages.append({"role": "user", "content": initial_prompt})
                 

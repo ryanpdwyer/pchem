@@ -8,6 +8,14 @@ import zipfile
 import tempfile
 import re
 from io import StringIO 
+from sigfig import round
+
+def sci_form(number, sigfigs=2):
+    """Format a number in scientific notation with HTML superscript."""
+    formatted = round(str(number), sigfigs=sigfigs, notation='scientific')
+    print(formatted)
+    base, exponent = formatted.split('E')
+    return f"{base}×10<sup>{exponent}</sup>"
 
 # def create_file( suffix='.png'):
 #     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmpfile:
