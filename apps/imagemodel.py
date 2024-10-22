@@ -11,6 +11,16 @@ from dotenv import load_dotenv
 import os
 
 def run():
+    # Add custom CSS to mirror the camera preview
+    st.markdown("""
+        <style>
+        video {
+            transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     vars = load_dotenv()
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

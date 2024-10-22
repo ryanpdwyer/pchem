@@ -80,11 +80,11 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Chemistry and FYS Tools")
 
 apps = {
-    "MIR Puzzle": mirpuzzle,
+    "GPT-4o-mini Image Classifier": imagemodel,
                  "Zeff": zeff,
                  "GPT-3 vs ChatGPT": openai_chat,
     "Neural Network Game": neuralnetwork,
-    "GPT-4o-mini Image Classifier": imagemodel,
+        "MIR Puzzle": mirpuzzle,
     'GPT-4o-mini Image Regression': imagemodel_regression,
     "CHE 120 Kinetics": arrhen,
     "Electron Visualization": random_electrons,
