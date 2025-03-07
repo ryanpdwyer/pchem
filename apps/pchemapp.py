@@ -80,13 +80,14 @@ logging.info(f"Start Script - id: "+_get_session())
 st.title("Chemistry and FYS Tools")
 
 apps = {
-    "GPT-4o-mini Image Classifier": imagemodel,
-                 "Zeff": zeff,
-                 "GPT-3 vs ChatGPT": openai_chat,
-    "Neural Network Game": neuralnetwork,
-        "MIR Puzzle": mirpuzzle,
-    'GPT-4o-mini Image Regression': imagemodel_regression,
     "CHE 120 Kinetics": arrhen,
+    "MIR Puzzle": mirpuzzle,
+    "1st Law of Thermodynamics": thermoFirstLaw,
+    "GPT-4o-mini Image Classifier": imagemodel,
+    "Zeff": zeff,
+    "GPT-3 vs ChatGPT": openai_chat,
+    "Neural Network Game": neuralnetwork,
+    'GPT-4o-mini Image Regression': imagemodel_regression,
     "Electron Visualization": random_electrons,
 "Combine UV-Vis Data": combineCSV, 
         "Combine Raman Data": combineRaman,
@@ -94,7 +95,6 @@ apps = {
         'Electrochemistry Peak Picking': combineEChemZip,
         'Plot Excel Data': plotExcel,
         "Plot Solartron Data": solartronData,
-        "1st Law of Thermodynamics": thermoFirstLaw,
         "Kinetics - Ocean Optics": kinetics,
         "2nd Law Calorimeter": thermoCalorimeter,
         "Mystery Gas": thermoGas,
