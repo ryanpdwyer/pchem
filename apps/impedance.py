@@ -184,7 +184,7 @@ class EClass:
         W= lambda x: x/sm.sqrt(2*sm.pi*EClass.f)+x/(1j*sm.sqrt(2*sm.pi*EClass.f)),
         P= lambda x, y: 1/(x*(2*sm.pi*EClass.f)**y)*sm.exp(-sm.pi/2*y*sm.I),
         O= lambda x, y: x/sm.sqrt(2*sm.pi*EClass.f)*sm.tanh(sm.sqrt(y*sm.I*2*sm.pi*EClass.f)),
-        S= lambda x, y: x/sm.sqrt(2*sm.pi*EClass.f)*sm.coth(sm.sqrt(y*sm.I*2*sm.pi*EClass.f)),
+        S= lambda x, y: x/sm.sqrt(2*sm.pi*EClass.f)/sm.tanh(sm.sqrt(y*sm.I*2*sm.pi*EClass.f)),
         L=lambda x: 2*sm.I*sm.pi*EClass.f*x
         )
 
