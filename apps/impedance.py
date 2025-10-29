@@ -121,55 +121,52 @@ cursor: pointer;
 # import plotly.express as px
 # import pandas as pd
 
-
-class ZElements:
-    def R(f, R):
-        return R
+# class ZElements:
+#     def R(f, R):
+#         return R
     
-    def C(f, C):
-        omega = 2*np.pi*f
-        return 1/(1j*omega*C)
+#     def C(f, C):
+#         omega = 2*np.pi*f
+#         return 1/(1j*omega*C)
     
-    def W(f, Aw):
-        sqrt_omega = np.sqrt(2*np.pi*f)
-        return Aw/sqrt_omega + Aw/(1j*sqrt_omega)
+#     def W(f, Aw):
+#         sqrt_omega = np.sqrt(2*np.pi*f)
+#         return Aw/sqrt_omega + Aw/(1j*sqrt_omega)
 
 
+Zdef = dict(R=100.0, C=1.0, W=10.0, P=1.0, n=0.5, O=10.0, S=10.0, T=1.0, L=10.0)
 
-
-Zdef = dict(R=100.0, C=1.0, W=10.0, P=1.0, n=0.5, L=10.0)
-
-def impedance(x):
-    try:
-        return Z[x.name[0]](x)
-    except:
-        return x
+# def impedance(x):
+#     try:
+#         return Z[x.name[0]](x)
+#     except:
+#         return x
 
 def default_val(x):
     return Zdef[x[0]]
 
 
 
-class Model:
+# class Model:
     
-    def __init__(self):
-        self.params = set()
+#     def __init__(self):
+#         self.params = set()
 
-    def par(self, x, y):
-        return 1/(1/self.impedance(x) + 1/self.impedance(y))
+#     def par(self, x, y):
+#         return 1/(1/self.impedance(x) + 1/self.impedance(y))
 
-    def ser(self, *args):
-        return sum(self.impedance(x) for x in args)
+#     def ser(self, *args):
+#         return sum(self.impedance(x) for x in args)
 
-    def impedance(self, x):
-        try:
-            imp = Z[x.name[0]](x)
-            if x not in self.params:
-                self.params.append(x)
-        except:
-            imp = x
+#     def impedance(self, x):
+#         try:
+#             imp = Z[x.name[0]](x)
+#             if x not in self.params:
+#                 self.params.append(x)
+#         except:
+#             imp = x
         
-        return imp
+#         return imp
 
 def render_svg(svg):
     """Renders the given svg string."""
@@ -177,7 +174,7 @@ def render_svg(svg):
     html = r'<img src="data:image/svg+xml;base64,%s"/>' % b64
     st.write(html, unsafe_allow_html=True)
 
-cDict = dict(R=elm.Resistor, C=elm.Capacitor, W=elm.RBox, P=elm.RBox, L=elm.Inductor)
+cDict = dict(R=elm.Resistor, C=elm.Capacitor, W=elm.RBox, P=elm.RBox, O=elm.RBox, S=elm.RBox, L=elm.Inductor)
 
 
 
@@ -186,19 +183,26 @@ class EClass:
     Z = dict(R=lambda x: x, C=lambda x: 1/(2*sm.pi*sm.I*EClass.f*x),
         W= lambda x: x/sm.sqrt(2*sm.pi*EClass.f)+x/(1j*sm.sqrt(2*sm.pi*EClass.f)),
         P= lambda x, y: 1/(x*(2*sm.pi*EClass.f)**y)*sm.exp(-sm.pi/2*y*sm.I),
+        O= lambda x, y: x/sm.sqrt(2*sm.pi*EClass.f)*sm.tanh(sm.sqrt(y*sm.I*2*sm.pi*EClass.f)),
+        S= lambda x, y: x/sm.sqrt(2*sm.pi*EClass.f)*sm.coth(sm.sqrt(y*sm.I*2*sm.pi*EClass.f)),
         L=lambda x: 2*sm.I*sm.pi*EClass.f*x
         )
 
     def __call__(self, label):
-        if label[0] != "P":
+        if label[0] in ["P", "O", "S"]:
+            # Two-parameter elements
+            if label[0] == "P":
+                param1, param2 = sm.symbols(f"{label} n_{label[1:]}")
+            else:  # O or S
+                param1, param2 = sm.symbols(f"{label} T_{label[1:]}")
+            Z_val = self.Z[label[0]](param1, param2)
+            im = ImpedanceMod(Z_val, params={param1, param2}, network=label)
+        else:
+            # Single-parameter elements
             symbol = sm.symbols(label)
             Z_val = self.Z[label[0]](symbol)
             im = ImpedanceMod(Z_val, params={symbol}, network=label)
-        else:
-            P, n = sm.symbols(f"{label} n_{label[1:]}")
-            Z_val = self.Z[label[0]](P, n)
-            im = ImpedanceMod(Z_val, params={P, n}, network=label)
-        
+
         return im
 
 
@@ -392,6 +396,12 @@ This page fits electrochemical impedance spectroscopy data to a circuit chosen b
             - P (commonly Q, units Ω⁻¹ μsⁿ)
             - n: Unitless, 0 < n < 1
         W: Warburg Element (Ω)
+        O: Finite-length Warburg Element, Open (transmissive) boundary
+            - O Warburg Resistance (Ω)
+            - T Diffusion time (μs)
+        S: Finite-length Warburg Element, Short (reflective) boundary
+            - S Warburg Resistance (Ω)
+            - T Diffusion time (μs)
         
 To connect circuit elements, use `-` for a series connection and
 `//` for a parallel connection. You can use parenthesis to clarify
@@ -501,8 +511,8 @@ Use the boxes below to change the labels for each line that will go on the graph
     if plotModel:
         a2.plot(out.real, -out.imag, label='Model', color='0')
 
-    a2.set_xlabel("$ Z' $ (ohm)")
-    a2.set_ylabel("$-Z''$ (ohm)")
+    a2.set_xlabel(r"$Z^\prime$ (ohm)")
+    a2.set_ylabel(r"$-Z^{\prime\prime}$ (ohm)")
     a2.set_aspect('equal', 'box')
     a2.legend()
     f2.tight_layout()
@@ -514,18 +524,18 @@ Use the boxes below to change the labels for each line that will go on the graph
 
     f_r, ax_r = plt.subplots()
 
-    color_cycle = ax._get_lines.prop_cycler
     for d, fit, label in zip(data, fits, labels):
         Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
         l1, = ax.semilogx(d[f_column], d[x_column], '.', label=label+' Z\'')
-        new_color = next(color_cycle)['color']
-        l2 = ax.scatter(d[f_column], -d[y_column], s=6, marker='o',fc='none', ec=new_color, label=label+' -Z\"')
-        
-        ax.semilogx(d[f_column], Z_fit.real, '-', color=l1.get_color(), label=label+" $Z'$ mod")
-        ax.semilogx(d[f_column], -Z_fit.imag, '--', color=new_color, label=label+" $-Z''$ mod")
+        color1 = l1.get_color()
+        l2, = ax.semilogx(d[f_column], -d[y_column], 'o', fillstyle='none', label=label+' -Z\"')
+        color2 = l2.get_color()
 
-        ax_r.semilogx(d[f_column], d[x_column].values - Z_fit.real, '.', color=l1.get_color(), label="$Z'$")
-        ax_r.scatter(d[f_column], -d[y_column].values + Z_fit.imag, s=6, marker='o', ec=new_color, fc='none', label="$Z''$")
+        ax.semilogx(d[f_column], Z_fit.real, '-', color=color1, label=label+" $Z'$ mod")
+        ax.semilogx(d[f_column], -Z_fit.imag, '--', color=color2, label=label+" $-Z''$ mod")
+
+        ax_r.semilogx(d[f_column], d[x_column].values - Z_fit.real, '.', color=color1, label="$Z'$")
+        ax_r.scatter(d[f_column], -d[y_column].values + Z_fit.imag, s=6, marker='o', ec=color2, fc='none', label="$Z''$")
 
     # Model
     if plotModel:
