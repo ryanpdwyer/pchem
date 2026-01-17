@@ -9,6 +9,7 @@ import io
 import base64
 from pchemapps.util import find, write_excel, process_file
 import pchemapps.util as util
+from pchemapps.notebook_export import add_notebook_download_buttons
 
 
 
@@ -176,6 +177,19 @@ Use the boxes below to change the labels for each line that will go on the graph
             st.write(combined_data)
             filename = st.text_input("Filename:", value="data")
             write_excel(combined_data, filename)
+
+            # Notebook export
+            add_notebook_download_buttons(
+                combined_data=combined_data,
+                settings=settings,
+                labels=labels,
+                x_label=x_label,
+                y_label=y_label,
+                x_column=x_column,
+                title="UV-Vis Data Analysis",
+                data_type="UV-Vis",
+                filename_base=filename
+            )
 
         elif use_separate_x:
             data, settings = util.limit_x_values(data, x_column, settings, step=1.0)

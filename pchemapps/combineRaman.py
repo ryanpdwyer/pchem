@@ -8,6 +8,7 @@ import io
 from scipy import signal
 import base64
 from pchemapps.util import find, write_excel, process_raman
+from pchemapps.notebook_export import add_notebook_download_buttons
 
 
 
@@ -226,6 +227,19 @@ Use the boxes below to change the labels for each line that will go on the graph
             st.write(combined_data)
             filename = st.text_input("Filename:", value="data")
             write_excel(combined_data, filename)
+
+            # Notebook export
+            add_notebook_download_buttons(
+                combined_data=combined_data,
+                settings=settings,
+                labels=labels,
+                x_label=x_label,
+                y_label=y_label,
+                x_column=x_column,
+                title="Raman Spectroscopy Analysis",
+                data_type="Raman",
+                filename_base=filename
+            )
 
 if __name__ == "__main__":
     run()
