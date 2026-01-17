@@ -11,6 +11,7 @@ import io
 import base64
 from scipy import signal
 from pchemapps.util import process_file
+from pchemapps.notebook_export import add_echem_notebook_download_buttons
 
 
 def set_x_limit(ax):
@@ -248,11 +249,22 @@ Use the boxes below to change the labels for each line that will go on the graph
             
 
 
-            # # Saving
-            # st.markdown("### Output options")
-            # st.write(combined_data)
-            # filename = st.text_input("Filename:", value="data")
-            # write_excel(combined_data, filename)
+            # Output options
+            st.markdown("### Output options")
+            filename = st.text_input("Filename:", value="echem_peaks")
+
+            # Notebook export
+            add_echem_notebook_download_buttons(
+                data=data,
+                settings=settings,
+                labels=labels,
+                x_label=x_label,
+                y_label=y_label,
+                x_column=x_column,
+                y_column=y_column,
+                title="Electrochemistry Peak Analysis",
+                filename_base=filename
+            )
 
 if __name__ == "__main__":
     run()

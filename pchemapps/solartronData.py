@@ -11,6 +11,7 @@ import io
 from copy import copy
 import base64
 from pchemapps.util import write_excel
+from pchemapps.notebook_export import add_echem_notebook_download_buttons
 
 
 
@@ -212,6 +213,19 @@ Use the boxes below to change the labels for each line that will go on the graph
             filename = st.text_input("Filename:", value="data")
             write_excel(df_all, filename)
             st.write(df_all)
+
+            # Notebook export
+            add_echem_notebook_download_buttons(
+                data=data,
+                settings=settings,
+                labels=list(labels.values()),
+                x_label=x_label,
+                y_label=y_label,
+                x_column=x_column,
+                y_column=y_column,
+                title="Solartron Electrochemistry Analysis",
+                filename_base=filename
+            )
 
 if __name__ == "__main__":
     run()

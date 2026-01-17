@@ -7,6 +7,7 @@ import streamlit as st
 import io
 import base64
 from pchemapps.util import find, write_excel
+from pchemapps.notebook_export import add_notebook_download_buttons
 
 def process_file(f):
     if f.name.endswith("csv"):
@@ -175,6 +176,19 @@ Use the boxes below to change the labels for each line that will go on the graph
             st.write(combined_data)
             filename = st.text_input("Filename:", value="data")
             write_excel(combined_data, filename)
+
+            # Notebook export
+            add_notebook_download_buttons(
+                combined_data=combined_data,
+                settings=settings,
+                labels=labels,
+                x_label=x_label,
+                y_label=y_label,
+                x_column=x_column,
+                title="Excel Absorbance Analysis",
+                data_type="Absorbance",
+                filename_base=filename
+            )
 
 if __name__ == "__main__":
     run()

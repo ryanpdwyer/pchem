@@ -286,3 +286,239 @@ def add_notebook_download_buttons(
             mime="text/x-python",
             help="Percent-script format - open in VS Code, Spyder, or JupyterLab"
         )
+
+
+def generate_echem_notebook(
+    data: list[pd.DataFrame],
+    settings: dict,
+    labels: list[str],
+    x_label: str,
+    y_label: str,
+    x_column: str,
+    y_column: str,
+    title: str = "Electrochemistry Data Analysis",
+) -> list[dict]:
+    """
+    Generate notebook cells for electrochemistry data with multiple traces.
+
+    Args:
+        data: List of DataFrames, one per experiment/file
+        settings: Processing settings dict
+        labels: List of labels for each trace
+        x_label: X-axis label for plotting
+        y_label: Y-axis label for plotting
+        x_column: Column name for x-axis
+        y_column: Column name for y-axis
+        title: Notebook title
+
+    Returns a list of cells that can be passed to create_ipynb or create_percent_script.
+    """
+    cells = []
+
+    # Title cell
+    cells.append({
+        'type': 'markdown',
+        'source': f"# {title}\n\nGenerated from the electrochemistry analysis tool."
+    })
+
+    # Imports cell
+    cells.append({
+        'type': 'code',
+        'source': """import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from io import StringIO
+
+# For Google Colab, uncomment if needed:
+# !pip install plotly
+import plotly.graph_objects as go"""
+    })
+
+    # Data cell
+    cells.append({
+        'type': 'markdown',
+        'source': "## Load Data\n\nThe data is embedded directly in this notebook as separate datasets."
+    })
+
+    # Embed each DataFrame as CSV
+    data_code_parts = ["# Embedded data from Streamlit app", "datasets = []", ""]
+    for i, (df, label) in enumerate(zip(data, labels)):
+        csv_data = dataframe_to_csv_string(df[[x_column, y_column]])
+        data_code_parts.append(f'# Dataset {i}: {label}')
+        data_code_parts.append(f'csv_{i} = """')
+        data_code_parts.append(csv_data.strip())
+        data_code_parts.append('"""')
+        data_code_parts.append(f'datasets.append(pd.read_csv(StringIO(csv_{i})))')
+        data_code_parts.append('')
+
+    cells.append({
+        'type': 'code',
+        'source': '\n'.join(data_code_parts)
+    })
+
+    # Settings cell
+    settings_str = json.dumps(settings, indent=2)
+    cells.append({
+        'type': 'markdown',
+        'source': "## Analysis Settings\n\nThese are the settings used in the Streamlit app:"
+    })
+
+    cells.append({
+        'type': 'code',
+        'source': f'''# Settings from Streamlit app
+settings = {settings_str}
+x_column = "{x_column}"
+y_column = "{y_column}"
+x_label = "{x_label}"
+y_label = "{y_label}"
+labels = {labels}'''
+    })
+
+    # Matplotlib plotting cell
+    cells.append({
+        'type': 'markdown',
+        'source': "## Plot with Matplotlib"
+    })
+
+    cells.append({
+        'type': 'code',
+        'source': '''fig, ax = plt.subplots(figsize=(10, 6))
+
+for df, label in zip(datasets, labels):
+    ax.plot(df[x_column].values, df[y_column].values, label=label)
+
+ax.set_xlabel(x_label)
+ax.set_ylabel(y_label)
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()'''
+    })
+
+    # Plotly plotting cell
+    cells.append({
+        'type': 'markdown',
+        'source': "## Interactive Plot with Plotly"
+    })
+
+    cells.append({
+        'type': 'code',
+        'source': f'''fig = go.Figure()
+
+for df, label in zip(datasets, labels):
+    fig.add_trace(go.Scatter(x=df[x_column], y=df[y_column],
+                             mode='lines', name=label))
+
+fig.update_layout(
+    title="{title}",
+    xaxis_title=x_label,
+    yaxis_title=y_label
+)
+fig.show()'''
+    })
+
+    # Export cell
+    cells.append({
+        'type': 'markdown',
+        'source': "## Export Data\n\nSave the processed data to files:"
+    })
+
+    cells.append({
+        'type': 'code',
+        'source': '''# Save each dataset to separate files
+for i, (df, label) in enumerate(zip(datasets, labels)):
+    safe_label = label.replace(" ", "_").replace("/", "-")
+    df.to_csv(f"data_{i}_{safe_label}.csv", index=False)
+
+# Or combine all into one DataFrame with a 'dataset' column
+all_data = []
+for i, (df, label) in enumerate(zip(datasets, labels)):
+    df_copy = df.copy()
+    df_copy['dataset'] = label
+    all_data.append(df_copy)
+
+combined = pd.concat(all_data, ignore_index=True)
+combined.to_csv("all_data_combined.csv", index=False)
+
+print("Data saved!")'''
+    })
+
+    # Customization cell
+    cells.append({
+        'type': 'markdown',
+        'source': """## Customize Your Analysis
+
+Feel free to modify the code above to:
+- Change plot colors and line styles
+- Add peak annotations
+- Calculate areas under curves
+- Perform baseline corrections
+- Compare different experiments"""
+    })
+
+    return cells
+
+
+def add_echem_notebook_download_buttons(
+    data: list[pd.DataFrame],
+    settings: dict,
+    labels: list[str],
+    x_label: str,
+    y_label: str,
+    x_column: str,
+    y_column: str,
+    title: str = "Electrochemistry Data Analysis",
+    filename_base: str = "echem_analysis"
+):
+    """
+    Add download buttons for electrochemistry notebook export.
+
+    Args:
+        data: List of DataFrames, one per experiment/file
+        settings: Processing settings dict
+        labels: List of labels for each trace
+        x_label: X-axis label for plotting
+        y_label: Y-axis label for plotting
+        x_column: Column name for x-axis
+        y_column: Column name for y-axis
+        title: Notebook title
+        filename_base: Base filename for downloads
+    """
+    st.markdown("### Export as Notebook")
+    st.markdown("Download a Jupyter notebook with your data and analysis code:")
+
+    # Generate cells
+    cells = generate_echem_notebook(
+        data=data,
+        settings=settings,
+        labels=labels,
+        x_label=x_label,
+        y_label=y_label,
+        x_column=x_column,
+        y_column=y_column,
+        title=title
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # .ipynb download
+        ipynb_content = create_ipynb(cells)
+        st.download_button(
+            label="Download .ipynb",
+            data=ipynb_content,
+            file_name=f"{filename_base}.ipynb",
+            mime="application/x-ipynb+json",
+            help="Jupyter notebook format - open in JupyterLab, Colab, or VS Code"
+        )
+
+    with col2:
+        # .py percent-script download
+        py_content = create_percent_script(cells)
+        st.download_button(
+            label="Download .py",
+            data=py_content,
+            file_name=f"{filename_base}.py",
+            mime="text/x-python",
+            help="Percent-script format - open in VS Code, Spyder, or JupyterLab"
+        )
