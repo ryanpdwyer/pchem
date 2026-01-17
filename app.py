@@ -12,6 +12,11 @@ st.set_page_config(
     layout="wide",
 )
 
+# Home page
+home_page = [
+    st.Page("pages/home.py", title="Home", icon="🏠", url_path="home", default=True),
+]
+
 # Define pages by category
 kinetics_pages = [
     st.Page("pages/kinetics/arrhenius.py", title="CHE 120 Kinetics", icon="⚗️", url_path="kinetics"),
@@ -60,6 +65,7 @@ utilities_pages = [
 
 # Navigation with sections
 pg = st.navigation({
+    "": home_page,
     "Kinetics": kinetics_pages,
     "Thermodynamics": thermodynamics_pages,
     "Quantum Chemistry": quantum_pages,
