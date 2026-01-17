@@ -139,7 +139,7 @@ The sliders let you
         if st.session_state.running: # Reset temperature...
             st.session_state.thermGasData["Tsys"][-1] = Tsys
         
-        st.experimental_rerun()
+        st.rerun()
     
     reset_simulation = st.sidebar.button(f"Reset simulation")
 
@@ -148,7 +148,7 @@ The sliders let you
         st.session_state.thermGasData = copy.copy(data_default)
         st.session_state.container = "Dewar"
 
-        st.experimental_rerun()
+        st.rerun()
 
     if st.session_state.running:
         st.markdown("### Simulation state: running")
@@ -197,7 +197,7 @@ Pressure $P$ = {Psys:.3f} bar
         st.session_state.thermGasData['m'].append(m_gas)
         st.session_state.thermGasData['t'].append(st.session_state.thermGasData['t'][-1]+dt)
         time.sleep(0.5)
-        st.experimental_rerun()
+        st.rerun()
 
 
 

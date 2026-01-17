@@ -271,7 +271,7 @@ of 1 mol of ice initially at 0 °C at $P = 1$ bar. The sliders let you
         if st.session_state.running: # Reset temperature...
             st.session_state.data["Tsys"][-1] = Tsys
         
-        st.experimental_rerun()
+        st.rerun()
     
     reset_simulation = st.sidebar.button(f"Reset simulation")
 
@@ -280,7 +280,7 @@ of 1 mol of ice initially at 0 °C at $P = 1$ bar. The sliders let you
         st.session_state.data = copy.copy(data_default)
         st.session_state.container = "Dewar"
 
-        st.experimental_rerun()
+        st.rerun()
 
     if st.session_state.running:
         st.markdown("### Simulation state: running")
@@ -329,7 +329,7 @@ Ice = {ice:.3f} mol, &nbsp; &nbsp; Water: {water:.3f} mol
         st.session_state.data["water"].append(water)
         st.session_state.data['t'].append(st.session_state.data['t'][-1]+dt)
         time.sleep(0.5)
-        st.experimental_rerun()
+        st.rerun()
 
 
 

@@ -1,7 +1,7 @@
 
 import logging
 import time
-import numpy as np
+import uuid
 import streamlit as st
 import mirpuzzle
 import combineCSV
@@ -28,53 +28,23 @@ import arrhen
 import random_electrons
 import zeff
 
-import socket
-import copy
 
-from streamlit.script_run_context import get_script_run_ctx
-from streamlit.server.server import Server
-
-
-def _get_session():
-    """Get the session object from Streamlit
-
-    Returns:
-        object: the session object for the current thread
-
-    """
-    # Hack to get the session object from Streamlit.
-
-    ctx = get_script_run_ctx()
-
-    session = None
-    session_infos = Server.get_current()._session_info_by_id.items()
-
-    session_id = None
-    for id, session_info in session_infos:
-        s = session_info.session
-        if (not hasattr(s, '_main_dg') and s._uploaded_file_mgr == ctx.uploaded_file_mgr):
-            session_id = id
-
-    if session_id is None:
-        raise RuntimeError(
-            "Oh no! Couldn't get your Streamlit Session object"
-            'Are you doing something fancy with threads?')
-    return session_id
-
-
-
-@st.cache
+@st.cache_resource
 def configLog():
-        logging.basicConfig(filename='debug-log.log', encoding='utf-8',
-                level=logging.INFO, force=True,
-                    format='%(asctime)s.%(msecs)03d %(levelname)s - %(funcName)s: %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',)
+    logging.basicConfig(filename='debug-log.log', encoding='utf-8',
+            level=logging.INFO, force=True,
+                format='%(asctime)s.%(msecs)03d %(levelname)s - %(funcName)s: %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S',)
 
 
 configLog()
 
+# Use session_state for persistent session ID across reruns
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())[:8]
+
 startTime = time.time_ns()/1e6
-logging.info(f"Start Script - id: "+_get_session())
+logging.info(f"Start Script - id: {st.session_state.session_id}")
 
 
 st.title("Chemistry and FYS Tools")

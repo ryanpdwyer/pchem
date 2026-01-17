@@ -1,5 +1,4 @@
 import streamlit as st
-import openai
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -77,7 +76,7 @@ def run():
                 st.session_state.right_messages.append({"role": "assistant", "content": right_response})
                 
                 st.session_state.initialized = True
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.warning("Please enter an initial prompt before sending.")
 
@@ -95,7 +94,7 @@ def run():
             st.session_state.left_messages.append({"role": "user", "content": left_input})
             response = get_gpt_response(st.session_state.left_messages, "davinci-002")
             st.session_state.left_messages.append({"role": "assistant", "content": response})
-            st.experimental_rerun()
+            st.rerun()
 
     # Right chat (selectable GPT-3.5 model)
     with right_column:
@@ -109,7 +108,7 @@ def run():
             response = get_gpt_response(st.session_state.right_messages, right_model)
             st.session_state.right_messages.append({"role": "assistant", "content": response})
             # Also reset the right chat input field to empty
-            st.experimental_rerun()
+            st.rerun()
 
 
 if __name__ == "__main__":
