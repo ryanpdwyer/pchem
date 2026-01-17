@@ -9,7 +9,7 @@ import io
 import base64
 from pchemapps.util import find, write_excel, process_file
 import pchemapps.util as util
-from pchemapps.notebook_export import add_notebook_download_buttons
+from pchemapps.notebook_export import add_notebook_download_buttons, add_echem_notebook_download_buttons
 
 
 
@@ -221,9 +221,23 @@ Use the boxes below to change the labels for each line that will go on the graph
                     ax.grid()
                 ax.legend()
                 st.pyplot(fig)
-            
 
-            
+            # Output options for separate x-axis data
+            st.markdown("### Output options")
+            filename = st.text_input("Filename:", value="data", key="separate_x_filename")
+
+            # Notebook export (multi-DataFrame version)
+            add_echem_notebook_download_buttons(
+                data=data,
+                settings=settings,
+                labels=labels,
+                x_label=x_label,
+                y_label=y_label,
+                x_column=x_column,
+                y_column=y_column,
+                title="UV-Vis Data Analysis",
+                filename_base=filename
+            )
 
 
 if __name__ == "__main__":
