@@ -14,7 +14,7 @@ from matplotlib.patches import Rectangle
 from scipy import interpolate
 import CoolProp.CoolProp as CP
 
-from util import write_excel
+from pchemapps.util import write_excel
 
 
 def arrow(angle):

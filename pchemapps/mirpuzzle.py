@@ -2,7 +2,7 @@ import streamlit as st
 import uuid
 import csv
 from datetime import datetime
-from util import sci_form
+from pchemapps.util import sci_form
 
 def log_response(user_id, puzzle_number, P, D, calculated_rate, expected_rate, user_expected_rate, is_correct):
     with open('puzzle_log.csv', 'a', newline='') as file:

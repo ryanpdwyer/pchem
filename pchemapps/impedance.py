@@ -6,7 +6,7 @@ import base64
 import re
 from scipy import optimize
 from munch import Munch
-from util import process_file
+from pchemapps.util import process_file
 
 import lmfit as lm
 import sympy as sm

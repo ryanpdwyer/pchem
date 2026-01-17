@@ -12,7 +12,7 @@ import streamlit as st
 from matplotlib.patches import Rectangle
 from scipy import interpolate
 
-from util import write_excel
+from pchemapps.util import write_excel
 
 
 T = np.arange(0, 101, dtype=float)

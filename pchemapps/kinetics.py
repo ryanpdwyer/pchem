@@ -9,8 +9,8 @@ import io
 import base64
 import re
 from collections import defaultdict
-from util import find, write_excel, process_file
-import util
+from pchemapps.util import find, write_excel, process_file
+import pchemapps.util as util
 
 
 

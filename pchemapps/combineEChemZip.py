@@ -10,7 +10,7 @@ import glob
 import io
 import base64
 from scipy import signal
-from util import process_file
+from pchemapps.util import process_file
 
 
 def set_x_limit(ax):

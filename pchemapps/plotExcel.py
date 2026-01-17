@@ -6,7 +6,7 @@ import plotly.express as px
 import streamlit as st
 import io
 import base64
-from util import find, write_excel
+from pchemapps.util import find, write_excel
 
 def process_file(f):
     if f.name.endswith("csv"):

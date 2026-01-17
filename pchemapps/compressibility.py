@@ -16,7 +16,7 @@ from scipy import interpolate
 import CoolProp.CoolProp as CP
 from io import StringIO
 
-from util import write_excel
+from pchemapps.util import write_excel
 
 def vdW(Vbar, T, a, b, R=0.083145):
     return R*T/(Vbar-b) - a/(Vbar**2)

@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import io
 import base64
-from util import process_file
+from pchemapps.util import process_file
 
 
 def set_x_limit(ax):
