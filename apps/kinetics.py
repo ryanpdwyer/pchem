@@ -77,7 +77,7 @@ def normalize_data(combined_data, x_column, settings):
 def check_nans(df, col, threshold=0.5):
     return df[col].isna().sum() / len(df) > threshold
 
-@st.cache
+@st.cache_data
 def sort_files_and_create_data(files, sort_files):
     if sort_files:
         files = sorted(files, key=lambda x: x.name.split('__')[-1])
@@ -87,7 +87,7 @@ def sort_files_and_create_data(files, sort_files):
     data = [process_file(f) for f in files]
     return filenames, data
 
-@st.cache
+@st.cache_data
 def create_data_dict(filenames, data):
     files_dict = defaultdict(lambda : dict(times=[], data=[], number=[], time=[]))
     # df_all = pd.DataFrame()

@@ -12,8 +12,6 @@ import pandas as pd
 from scipy import optimize
 import streamlit as st
 from matplotlib.patches import Rectangle
-from numpy.lib.function_base import interp
-from numpy.lib.npyio import save
 from scipy import interpolate
 import CoolProp.CoolProp as CP
 from io import StringIO

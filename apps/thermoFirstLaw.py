@@ -10,8 +10,6 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from matplotlib.patches import Rectangle
-from numpy.lib.function_base import interp
-from numpy.lib.npyio import save
 from scipy import interpolate
 
 from util import write_excel

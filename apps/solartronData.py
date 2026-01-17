@@ -37,7 +37,7 @@ def process_file(f, file_number):
     return data
 
 
-@st.cache
+@st.cache_data
 def process_files(files):
     return {f"F{i}": process_file(file, i) for i, file in enumerate(files)}
 
