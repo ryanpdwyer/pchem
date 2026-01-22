@@ -12,6 +12,8 @@ from collections import defaultdict
 from pchemapps.util import find, write_excel, process_file
 from pchemapps import util
 
+st.page_link("pages/home.py", label="← Home")
+
 
 def combine_spectra(dataframes, labels, xcol, ycol, tol=1e-6):
     x_data = dataframes[0][xcol].values

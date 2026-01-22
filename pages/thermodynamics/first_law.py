@@ -14,6 +14,9 @@ from scipy import interpolate
 
 from pchemapps.util import write_excel
 
+# Home button
+st.page_link("pages/home.py", label="← Home")
+
 # Heat capacity data for water
 T = np.arange(0, 101, dtype=float)
 cP = np.array([
@@ -36,7 +39,8 @@ cP_water = interpolate.interp1d(T, cP)
 def arrow(angle):
     angle = np.radians(angle)
     length = 0.1
-    return patches.FancyArrow(0.5, -0.12, np.cos(angle)*length, np.sin(angle)*length)
+    return patches.FancyArrow(0.5, -0.12, np.cos(angle)*length, np.sin(angle)*length,
+                               fc="black", ec="black", width=0.02, head_width=0.05)
 
 
 def rect(bl, tr, **kwargs):

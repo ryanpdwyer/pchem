@@ -14,6 +14,8 @@ from scipy import interpolate
 
 from pchemapps.util import write_excel
 
+st.page_link("pages/home.py", label="← Home")
+
 T = np.arange(0, 101, dtype=float)
 cP = np.array([
 4.217, 4.213, 4.21, 4.207, 4.205, 4.202, 4.2, 4.198, 4.196, 4.194,

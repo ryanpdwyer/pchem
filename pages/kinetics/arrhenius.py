@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
+st.page_link("pages/home.py", label="← Home")
+
 st.markdown("# How does data become a line?")
 
 st.markdown("""

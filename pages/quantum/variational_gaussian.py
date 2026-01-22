@@ -12,6 +12,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from pchem import nintegrate, vectorize
 
+st.page_link("pages/home.py", label="← Home")
+
 x = sm.Symbol('x')
 
 hbar = 1.0

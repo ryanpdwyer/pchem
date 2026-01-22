@@ -8,6 +8,8 @@ from io import StringIO
 
 from pchemapps.util import write_excel
 
+st.page_link("pages/home.py", label="← Home")
+
 
 def vdW(Vbar, T, a, b, R=0.083145):
     return R*T/(Vbar-b) - a/(Vbar**2)

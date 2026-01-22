@@ -15,6 +15,8 @@ import CoolProp.CoolProp as CP
 
 from pchemapps.util import write_excel
 
+st.page_link("pages/home.py", label="← Home")
+
 
 def arrow(angle):
     angle = np.radians(angle)

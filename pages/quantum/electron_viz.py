@@ -11,6 +11,8 @@ from pchemapps.base import elements_df, get_e_config, n_in_shell, Zeff, write_e_
 import plotly.express as px
 import scipy.special as spe
 
+st.page_link("pages/home.py", label="← Home")
+
 
 def psi_r(r, n=1, l=0, Z=1):
     r = np.array(r)*Z

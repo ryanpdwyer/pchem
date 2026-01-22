@@ -4,6 +4,8 @@ from copy import copy
 import numpy as np
 from scipy.special import factorial
 
+st.page_link("pages/home.py", label="← Home")
+
 
 def W(ns):
     N = sum(ns)

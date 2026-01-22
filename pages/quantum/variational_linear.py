@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 
+st.page_link("pages/home.py", label="← Home")
+
 L = 10.0
 
 
