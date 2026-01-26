@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from collections import defaultdict
 from string import Template
-from base import *
+from pchemapps.base import *
 import plotly.express as px
 # Import special functions 
 import scipy.special as spe
