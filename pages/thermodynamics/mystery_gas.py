@@ -20,8 +20,9 @@ st.page_link("pages/home.py", label="← Home")
 
 def arrow(angle):
     angle = np.radians(angle)
-    length = 0.1
-    return patches.FancyArrow(0.5, -0.12, np.cos(angle)*length, np.sin(angle)*length)
+    length = 0.06
+    return patches.FancyArrow(0.5, -0.06, np.cos(angle)*length, np.sin(angle)*length,
+                               fc="black", ec="black", width=0.008, head_width=0.02)
 
 
 def rect(bl, tr, **kwargs):
