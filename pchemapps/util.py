@@ -67,6 +67,10 @@ def process_file(f):
         elif '>>>>>Begin Spectral Data<<<<<' in str_rep:
             raw_data = np.loadtxt(f, skiprows=13)
             data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])
+        elif ',' in str_rep:
+            # Simple CSV format with comma separator
+            from io import StringIO
+            data = pd.read_csv(StringIO(str_rep))
         else:
             data = pd.read_table(f)
     else:

@@ -36,9 +36,10 @@ def combine_spectra(dataframes, labels, xcol, ycol, tol=1e-6):
 def limit_x_values(combined_data, x_column, settings):
     st.markdown("### Limit x Range")
     x_data = combined_data[x_column].values
-    x_min_val = st.selectbox("Choose minimum x:", x_data, index=0 )
+    x_data_list = x_data.tolist()
+    x_min_val = st.selectbox("Choose minimum x:", x_data_list, index=0 )
     i_min = find(x_min_val, x_data)
-    x_max_val = st.selectbox("Choose maximum x:", x_data, index=len(x_data)-1 )
+    x_max_val = st.selectbox("Choose maximum x:", x_data_list, index=len(x_data_list)-1 )
     i_max = find(x_max_val, x_data)
     combined_data = combined_data.iloc[i_min:i_max, :]
     settings['x_min'] = x_min_val
@@ -52,11 +53,12 @@ def limit_x_values(combined_data, x_column, settings):
 def normalize_data(combined_data, x_column, settings):
     st.markdown("### Normalization options")
     x_data = combined_data[x_column].values
+    x_data_list = x_data.tolist()
     processing_options = ['None', "Normalized", "Relative"]
     processing = st.selectbox("Processing?", processing_options)
     settings['processing'] = processing
     if processing == 'Normalized':
-        normalize_wavelength = st.selectbox("Normalize data at: ", x_data)
+        normalize_wavelength = st.selectbox("Normalize data at: ", x_data_list)
         settings['normalization_wavelength'] = normalize_wavelength
     else:
         settings.pop('normalization_wavelength', 0)
