@@ -14,17 +14,17 @@ from pchemapps.notebook_export import add_notebook_download_buttons, add_echem_n
 
 
 def combine_spectra(dataframes, labels, xcol, ycol, tol=1e-6):
-    x_data = dataframes[0][xcol].values
+    x_data = pd.to_numeric(dataframes[0][xcol], errors='coerce').values
     all_data = [x_data]
     col_names = [xcol]
     col_names.extend(labels)
     for df in dataframes:
-        x = df[xcol].values
+        x = pd.to_numeric(df[xcol], errors='coerce').values
         if (len(x) != len(x_data)) or abs(x - x_data).max() > tol:
             st.write("X axes are different - Try deselecting `Same x axis?` and Submit again.")
             raise ValueError("X axis of each dataset should be the same!")
-        
-        y = df[ycol].values
+
+        y = pd.to_numeric(df[ycol], errors='coerce').values
         all_data.append(y)
         # ind, fname = ind_fname
         # before_ext = fname.split(".")[0]
