@@ -73,12 +73,19 @@ def check_nans(df, col, threshold=0.5):
     return df[col].isna().sum() / len(df) > threshold
 
 
+def _sort_key(name):
+    """Extract time from end of filename for sorting."""
+    m = re.search(r'(\d{1,2})-(\d{1,2})-(\d{1,2})-(\d+)\.[^.]+$', name)
+    if m:
+        hr, min_, sec, msec = m.groups()
+        return int(hr) * 3600 + int(min_) * 60 + int(sec) + int(msec) / 1000.0
+    return name
+
+
 @st.cache_data
 def sort_files_and_create_data(files, sort_files):
     if sort_files:
-        files = sorted(files, key=lambda x: x.name.split('__')[-1])
-    else:
-        files = files
+        files = sorted(files, key=lambda x: _sort_key(x.name))
     filenames = [(i, f.name) for i, f in enumerate(files)]
     data = [process_file(f) for f in files]
     return filenames, data
