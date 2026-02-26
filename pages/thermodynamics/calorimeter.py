@@ -200,7 +200,9 @@ Ice = {ice:.3f} mol, &nbsp; &nbsp; Water: {water:.3f} mol
 """, unsafe_allow_html=True)
 
 fig, ax = draw(current, container, ice)
-st.pyplot(fig)
+col1, col2 = st.columns([2, 1])
+with col1:
+    st.pyplot(fig, use_container_width=True)
 
 show_data = st.checkbox(label="Show data")
 

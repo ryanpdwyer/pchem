@@ -167,7 +167,9 @@ Total work $w$ = {work:.2f} J, &nbsp; &nbsp; Walls: {container}
 """, unsafe_allow_html=True)
 
 fig, ax = draw(current, container)
-st.pyplot(fig)
+col1, col2 = st.columns([2, 1])
+with col1:
+    st.pyplot(fig, use_container_width=True)
 
 show_data = st.checkbox(label="Show data")
 

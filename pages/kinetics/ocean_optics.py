@@ -87,18 +87,38 @@ def sort_files_and_create_data(files, sort_files):
 @st.cache_data
 def create_data_dict(filenames, data):
     files_dict = defaultdict(lambda: dict(times=[], data=[], number=[], time=[]))
+    # Match time pattern HH-MM-SS-MS at end of filename (before extension)
+    time_pattern = re.compile(r'(\d{1,2})-(\d{1,2})-(\d{1,2})-(\d+)\.[^.]+$')
     for filename, d in zip(filenames, data):
-        dataname, number, time = filename[1].split('__')
+        name = filename[1]
+        m = time_pattern.search(name)
+        if not m:
+            st.warning(f"Skipping file (no time found): {name}")
+            continue
+        hr, min_, sec, msec = m.groups()
+        time_seconds = int(hr) * 3600 + int(min_)*60 + int(sec) + int(msec)/1000.0
+        time_str = f'{hr}:{min_}:{sec}.{msec}'
+
+        # Everything before the time pattern is the prefix
+        prefix = name[:m.start()].rstrip('_ ')
+        # Split prefix on __ or whitespace to get name parts
+        parts = re.split(r'__|[\s]+', prefix)
+        parts = [p for p in parts if p]  # drop empty strings
+
+        if len(parts) >= 2:
+            number = parts[-1]
+            dataname = '_'.join(parts[:-1])
+        else:
+            number = '0'
+            dataname = parts[0] if parts else 'unknown'
+
         dataname_short = dataname.strip('_Absorbance')
-        hr, min_, sec, msec = time.split('-')
-        msec = msec.split('.')[0]
-        time = int(hr) * 3600 + int(min_)*60 + int(sec) + int(msec)/1000.0
 
         dict_entry = files_dict[dataname_short]
-        dict_entry['times'].append(time)
+        dict_entry['times'].append(time_seconds)
         dict_entry['data'].append(d)
         dict_entry['number'].append(number)
-        dict_entry['time'].append(f'{hr}:{min_}:{sec}.{msec}')
+        dict_entry['time'].append(time_str)
     return files_dict
 
 
