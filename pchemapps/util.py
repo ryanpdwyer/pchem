@@ -41,12 +41,12 @@ def limit_x_values(data, x_column, settings, step=None):
 
 
 
-def process_file(f):
+def process_file(f, skiprows=0):
     data = None
     if f.name.endswith("csv"):
-        data = pd.read_csv(f)
+        data = pd.read_csv(f, skiprows=skiprows)
     elif f.name.endswith("xlsx") or f.name.endswith("xls"):
-        data = pd.read_excel(f)
+        data = pd.read_excel(f, skiprows=skiprows)
     elif f.name.endswith("Absorbance"):
         raw_data = np.loadtxt(f, skiprows=19, max_rows=2048)
         data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])

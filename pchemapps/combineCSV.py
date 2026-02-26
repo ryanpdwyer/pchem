@@ -96,12 +96,13 @@ plot/normalize the spectra, and output a single Excel file for easy plotting and
     files = st.file_uploader("Upload CSV or Excel Files",
                 accept_multiple_files=True)
 
+    skiprows = st.number_input("Skip rows at top of file:", min_value=0, value=0, step=1)
 
     if files:
         st.write(files)
 
         filenames = [(i, f.name) for i, f in enumerate(files)]
-        data = [process_file(f) for f in files]
+        data = [process_file(f, skiprows=skiprows) for f in files]
 
         ind_fname = st.selectbox("Choose data to display: ", filenames,
             format_func=lambda x: x[1], index=0)
