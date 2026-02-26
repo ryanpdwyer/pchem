@@ -155,7 +155,9 @@ if files:
     st.write("""## Labels
 Use the boxes below to change the labels for each kinetics experiment.
     """)
-    labels = [st.text_input(key, value=key) for key in files_dict.keys()]
+    original_keys = list(files_dict.keys())
+    labels = [st.text_input(f"Label for: {key}", value=key, key=f"label_{i}") for i, key in enumerate(original_keys)]
+    label_map = dict(zip(original_keys, labels))
 
     same_x = False
     data_example = list(files_dict.values())[0]['data'][0]
@@ -180,7 +182,7 @@ Use the boxes below to change the labels for each kinetics experiment.
         data = np.array([np.mean(d[y_column].values[kinetics_mask]) for d in val['data']])
 
         dfs.append(
-            pd.DataFrame.from_dict({'Time (s)': times, 'A': data, 'name': key,
+            pd.DataFrame.from_dict({'Time (s)': times, 'A': data, 'name': label_map[key],
                                             'wavelength': wavelength_monitor,
                                             'bandwidth': wavelength_bandwidth,
                                             'number': val['number'],
