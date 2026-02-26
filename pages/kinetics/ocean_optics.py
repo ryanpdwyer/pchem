@@ -126,7 +126,7 @@ def create_data_dict(filenames, data):
         dict_entry['data'].append(d)
         dict_entry['number'].append(number)
         dict_entry['time'].append(time_str)
-    return files_dict
+    return dict(files_dict)
 
 
 # Page content starts here
