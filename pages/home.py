@@ -107,6 +107,8 @@ with col1:
             <li><a href="/calorimeter">2nd Law Calorimeter</a> <span class="tool-desc">Heat measurement</span></li>
             <li><a href="/mystery-gas">Mystery Gas</a> <span class="tool-desc">Gas identification</span></li>
             <li><a href="/equilibrium">Where is Equilibrium?</a> <span class="tool-desc">Entropy visualization</span></li>
+            <li><a href="/boltzmann-dollars">Boltzmann Dollar Game</a> <span class="tool-desc">Random exchange → Boltzmann</span></li>
+            <li><a href="/dollar-reaction">Dollar Game: L ⇌ R</a> <span class="tool-desc">Reaction quotient Q</span></li>
             <li><a href="/compressibility">Compressibility Factor</a> <span class="tool-desc">Van der Waals</span></li>
         </ul>
     </div>

@@ -23,6 +23,8 @@ all_pages = [
     st.Page("pages/thermodynamics/calorimeter.py", title="2nd Law Calorimeter", url_path="calorimeter"),
     st.Page("pages/thermodynamics/mystery_gas.py", title="Mystery Gas", url_path="mystery-gas"),
     st.Page("pages/thermodynamics/equilibrium.py", title="Where is Equilibrium?", url_path="equilibrium"),
+    st.Page("pages/thermodynamics/boltzmann_dollars.py", title="Boltzmann Dollar Game", url_path="boltzmann-dollars"),
+    st.Page("pages/thermodynamics/dollar_reaction.py", title="Dollar Game: L ⇌ R", url_path="dollar-reaction"),
     st.Page("pages/thermodynamics/compressibility.py", title="Compressibility Factor", url_path="compressibility"),
     # Quantum
     st.Page("pages/quantum/variational_gaussian.py", title="Variational Gaussian", url_path="variational-gaussian"),
