@@ -41,10 +41,55 @@ def limit_x_values(data, x_column, settings, step=None):
 
 
 
+def _read_thorlabs_osa(str_rep):
+    """Parse a Thorlabs OSA / FTS export.
+
+    Format: '#Thorlabs FTS' first line, '#Key;Value' header lines, a '[Data]'
+    marker, then 'x;y' rows (semicolon-separated), ending with '[EndOfFile]'.
+    Column names are built from the #Type / #XAxisUnit / #YAxisUnit header keys.
+    """
+    header = {}
+    lines = str_rep.splitlines()
+    try:
+        data_start = next(i for i, l in enumerate(lines) if l.strip() == '[Data]') + 1
+    except StopIteration:
+        raise ValueError("Thorlabs file has no [Data] section")
+    for line in lines[:data_start]:
+        if line.startswith('#') and ';' in line:
+            key, _, val = line[1:].partition(';')
+            header[key.strip()] = val.strip()
+    rows = []
+    for line in lines[data_start:]:
+        line = line.strip()
+        if not line or line.startswith('['):
+            break
+        rows.append(line.split(';'))
+    x_unit = header.get('XAxisUnit', 'nm').replace('nm_vac', 'nm').replace('nm_air', 'nm')
+    x_name = f"Wavelength ({x_unit})"
+    y_type = header.get('Type', 'Signal').strip() or 'Signal'
+    y_name = y_type[0].upper() + y_type[1:]
+    y_unit = header.get('YAxisUnit', '').strip()
+    if y_unit and y_unit.upper() != 'AU':
+        y_name += f" ({y_unit})"
+    data = pd.DataFrame(rows, columns=[x_name, y_name]).apply(pd.to_numeric, errors='coerce')
+    return data
+
+
+def _decode(f):
+    raw = f.getvalue() if hasattr(f, 'getvalue') else f.read()
+    if isinstance(raw, bytes):
+        raw = raw.decode('utf-8', errors='replace')
+    return raw
+
+
 def process_file(f, skiprows=0):
     data = None
     if f.name.endswith("csv"):
-        data = pd.read_csv(f, skiprows=skiprows)
+        str_rep = _decode(f)
+        if str_rep.lstrip().startswith('#Thorlabs') or '[SpectrumHeader]' in str_rep[:200]:
+            data = _read_thorlabs_osa(str_rep)
+        else:
+            data = pd.read_csv(StringIO(str_rep), skiprows=skiprows)
     elif f.name.endswith("xlsx") or f.name.endswith("xls"):
         data = pd.read_excel(f, skiprows=skiprows)
     elif f.name.endswith("Absorbance"):
@@ -57,7 +102,7 @@ def process_file(f, skiprows=0):
         str_rep = f.getvalue().decode("utf-8")
         if 'Instrument Name:,UV-1800' in str_rep:
             text=str_rep.splitlines()
-            header_regex = '\[.+\]'
+            header_regex = r'\[.+\]'
             groups = re.split(header_regex, str_rep)
             headings = re.findall(header_regex, str_rep)
             data_start = text.index('Wavelength (nm),Absorbance')
@@ -69,7 +114,6 @@ def process_file(f, skiprows=0):
             data = pd.DataFrame(raw_data, columns=["Wavelength (nm)", "Absorbance"])
         elif ',' in str_rep:
             # Simple CSV format with comma separator
-            from io import StringIO
             data = pd.read_csv(StringIO(str_rep))
         else:
             data = pd.read_table(f)
