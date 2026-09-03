@@ -64,13 +64,15 @@ def normalize_data(combined_data, x_column, settings):
 
     if processing == "Normalized":
         norm_ind = find(normalize_wavelength, x_data)
-        y_data = combined_data.values[:, 1:]
-        combined_data.values[:, 1:] = y_data / y_data[norm_ind]
+        combined_data = combined_data.copy()
+        y_data = combined_data.iloc[:, 1:].values
+        combined_data.iloc[:, 1:] = y_data / y_data[norm_ind]
                 
     if processing == "Relative":
         # Should probably be tweaked a bit to be more convenient...
-        y_data = combined_data.values[:, 1:]
-        combined_data.values[:, 1:] = y_data / y_data.max(axis=0)
+        combined_data = combined_data.copy()
+        y_data = combined_data.iloc[:, 1:].values
+        combined_data.iloc[:, 1:] = y_data / y_data.max(axis=0)
     
     return combined_data, settings
 
