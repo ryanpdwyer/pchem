@@ -24,10 +24,16 @@ def valid_peaks(table):
     return table
 
 
+def default_folder():
+    """Enlighten's default save location (dated subfolders under Documents), else the working directory."""
+    enlighten = Path.home() / 'Documents' / 'EnlightenSpectra'
+    return enlighten if enlighten.is_dir() else Path.cwd()
+
+
 def run():
     st.set_page_config(page_title='Spectra notebook', layout='wide')
     st.title('Spectra notebook')
-    folder = Path(st.sidebar.text_input('Spectra folder', value=str(Path.cwd())).strip()).expanduser()
+    folder = Path(st.sidebar.text_input('Spectra folder', value=str(default_folder())).strip()).expanduser()
     recursive = st.sidebar.checkbox('Include dated subfolders', value=True)
     st.sidebar.button('Refresh files')
     st.sidebar.caption('Raw files stay unchanged. Save names, notes and peak labels beside each spectrum.')

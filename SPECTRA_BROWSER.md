@@ -11,7 +11,17 @@ python -m pip install -r spectra-browser-requirements.txt
 python -m streamlit run pchemapps/spectra_browser.py --server.address 127.0.0.1
 ```
 
-Open the localhost URL printed by Streamlit. Enter the local spectra folder in the sidebar. Click Refresh files after collecting new spectra. No cloud upload or account is needed. On Windows, enter the actual local drive path. Keep it bound to localhost: this app intentionally reads and writes local files and is not intended as a public server.
+Open the localhost URL printed by Streamlit.
+
+### Windows instrument computer (micromamba)
+
+With micromamba installed and an environment (default name `py314`, Python 3.10 or later):
+
+1. Download the branch as a zip from GitHub and unzip it, e.g. to `C:\Users\<lab>\spectra-browser`. Git is not required.
+2. In PowerShell, from that folder, run `.\scripts\spectra-browser.ps1 -Install` once to install the packages into the environment.
+3. Afterwards double-click `Spectra Browser.bat`, or run `.\scripts\spectra-browser.ps1`. A browser tab opens automatically. Close the PowerShell window to stop the app.
+
+Use `-Env <name>` or set `$env:SPECTRA_ENV` for a different environment. The folder box defaults to `Documents\EnlightenSpectra`, Enlighten's save location with dated subfolders, when it exists. To update the app, replace the folder with a new zip; annotations live beside the spectra, not in the app folder. Enter the local spectra folder in the sidebar. Click Refresh files after collecting new spectra. No cloud upload or account is needed. On Windows, enter the actual local drive path. Keep it bound to localhost: this app intentionally reads and writes local files and is not intended as a public server.
 
 ## Student workflow
 
