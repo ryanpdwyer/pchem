@@ -15,13 +15,26 @@ Open the localhost URL printed by Streamlit.
 
 ### Windows instrument computer (micromamba)
 
-With micromamba installed and an environment (default name `py314`, Python 3.10 or later):
+Everything installs per-user; no administrator rights are needed. Internet is needed only during these steps.
 
-1. Download the branch as a zip from GitHub and unzip it, e.g. to `C:\Users\<lab>\spectra-browser`. Git is not required.
-2. In PowerShell, from that folder, run `.\scripts\spectra-browser.ps1 -Install` once to install the packages into the environment.
-3. Afterwards double-click `Spectra Browser.bat`, or run `.\scripts\spectra-browser.ps1`. A browser tab opens automatically. Close the PowerShell window to stop the app.
+1. **micromamba**, if not already installed. In PowerShell:
 
-Use `-Env <name>` or set `$env:SPECTRA_ENV` for a different environment. The folder box defaults to `Documents\EnlightenSpectra`, Enlighten's save location with dated subfolders, when it exists. To update the app, replace the folder with a new zip; annotations live beside the spectra, not in the app folder. Enter the local spectra folder in the sidebar. Click Refresh files after collecting new spectra. No cloud upload or account is needed. On Windows, enter the actual local drive path. Keep it bound to localhost: this app intentionally reads and writes local files and is not intended as a public server.
+   ```powershell
+   Invoke-Expression ((Invoke-WebRequest -Uri https://micro.mamba.pm/install.ps1 -UseBasicParsing).Content)
+   ```
+
+   Accept the defaults, then close and reopen PowerShell so `micromamba` is on the path.
+2. **The app.** Download the branch as a zip from GitHub and unzip it, e.g. to `C:\Users\<lab>\spectra-browser`. Git is not required.
+3. **Python and packages.** From that folder:
+
+   ```powershell
+   .\scripts\spectra-browser.ps1 -Install
+   ```
+
+   This creates the `py314` environment (Python 3.14 from conda-forge) if it does not exist, installs the packages from `spectra-browser-requirements.txt` with pip, and starts the app. If PowerShell refuses to run scripts, use `Spectra Browser.bat -Install` instead, or run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
+4. **Daily use.** Double-click `Spectra Browser.bat`, or run `.\scripts\spectra-browser.ps1`. A browser tab opens automatically. Close the PowerShell window to stop the app.
+
+Use `-Env <name>` (or `$env:SPECTRA_ENV`) for a different environment name and `-Python 3.12` to create it with another version. The folder box defaults to `Documents\EnlightenSpectra`, Enlighten's save location with dated subfolders, when it exists. To update the app, replace the folder with a new zip and rerun with `-Install`; annotations live beside the spectra, not in the app folder.
 
 ## Student workflow
 
