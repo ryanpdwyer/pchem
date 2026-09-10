@@ -181,6 +181,7 @@ with col2:
         </div>
         <ul class="tool-list">
             <li><a href="/sympy-shell">Sympy Shell</a> <span class="tool-desc">Symbolic math</span></li>
+            <li><a href="/oligomer">Oligomer Builder</a> <span class="tool-desc">Draw monomer → 3D oligomer</span></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)

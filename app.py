@@ -46,6 +46,7 @@ all_pages = [
     st.Page("pages/ai_tools/mir_puzzle.py", title="MIR Puzzle", url_path="mir-puzzle"),
     # Utilities
     st.Page("pages/utilities/sympy_shell.py", title="Sympy Shell", url_path="sympy-shell"),
+    st.Page("pages/utilities/oligomer_builder.py", title="Oligomer Builder", url_path="oligomer"),
 ]
 
 # Navigation without sidebar (position="hidden")
