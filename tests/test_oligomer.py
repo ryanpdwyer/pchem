@@ -9,6 +9,7 @@ from pchemapps.oligomer import (
     embed_and_optimize,
     inter_ring_bonds,
     parse_monomer,
+    to_gaussian_input,
 )
 
 
@@ -116,3 +117,20 @@ def test_planar_restraint_holds_inter_ring_dihedrals_near_anti():
     conf = mol3d.GetConformer()
     angles = [rdMolTransforms.GetDihedralDeg(conf, *quad) for quad in quads]
     assert all(abs(abs(angle) - 180.0) <= 5.0 for angle in angles)
+
+
+def test_gaussian_input_uses_optimized_geometry():
+    mol = build_oligomer({"A": "*CC*"}, "A")
+    mol3d, _ = embed_and_optimize(mol, max_iters=25)
+
+    text = to_gaussian_input(
+        mol3d,
+        route="HF/STO-3G SP",
+        title="REST submission test",
+        charge=-1,
+        multiplicity=2,
+    )
+
+    assert text.startswith("# HF/STO-3G SP\n\nREST submission test\n\n-1 2\n")
+    coordinate_lines = text.splitlines()[5:]
+    assert len([line for line in coordinate_lines if line.strip()]) == mol3d.GetNumAtoms()

@@ -1,6 +1,7 @@
 """Oligomer Builder - draw a monomer, build and optimize oligomers."""
 import streamlit as st
 import streamlit.components.v1 as components
+from webmo import WebMOREST
 
 st.page_link("pages/home.py", label="← Home")
 
@@ -8,6 +9,8 @@ from streamlit_ketcher import st_ketcher
 import py3Dmol
 
 from pchemapps import oligomer as olig
+
+WEBMO_REST_URL = "https://webmo.osc.edu/cgi-bin/rest.cgi"
 
 st.title("Oligomer Builder")
 st.markdown(
@@ -143,9 +146,11 @@ if st.button("Build and optimize 3D structure", type="primary"):
     st.session_state["olig_result"] = (oligo_smiles, molblock, energies)
 
 res = st.session_state.get("olig_result")
+current_mol3d = None
 if res and res[0] == oligo_smiles:
     _, molblock, energies = res
     mol3d = olig.Chem.MolFromMolBlock(molblock, removeHs=False)
+    current_mol3d = mol3d
     st.caption(
         f"MMFF94 energy of best conformer: {energies[0]:.1f} kcal/mol"
         + (f" (tried {len(energies)}; range {energies[0]:.1f} – {energies[-1]:.1f})"
@@ -171,3 +176,147 @@ if res and res[0] == oligo_smiles:
     d3.download_button("Download .pdb", olig.to_pdb(mol3d), f"{name}.pdb")
 elif res:
     st.info("Monomer or sequence changed — click the button to rebuild the 3D structure.")
+
+# ---------------------------------------------------------------- WebMO
+st.divider()
+st.subheader("WebMO")
+st.caption(
+    "Connect to WebMO Enterprise over REST. Your password is masked, retained only "
+    "in this Streamlit browser session, and is not cached or written to disk."
+)
+
+with st.expander("WebMO credentials and job submission", expanded=False):
+    webmo_url = st.text_input("REST URL", WEBMO_REST_URL, key="webmo_url")
+    wc1, wc2 = st.columns(2)
+    with wc1:
+        webmo_username = st.text_input("Username", key="webmo_username")
+    with wc2:
+        webmo_password = st.text_input(
+            "Password", type="password", key="webmo_password"
+        )
+
+    engine = st.text_input(
+        "Engine identifier",
+        "gaussian",
+        help="The connection test displays the engine identifiers enabled for your account.",
+    ).strip()
+
+    credentials_ready = bool(
+        webmo_url.strip() and webmo_username.strip() and webmo_password
+    )
+
+    if st.button("Test connection", disabled=not credentials_ready):
+        with st.spinner("Connecting to WebMO..."):
+            try:
+                rest = WebMOREST(
+                    webmo_url.rstrip("/"), webmo_username.strip(), webmo_password
+                )
+                engines = rest.get_engines()
+                st.session_state["webmo_engines"] = engines
+                st.session_state["webmo_connection"] = (
+                    webmo_url.rstrip("/"),
+                    webmo_username.strip(),
+                )
+            except Exception as exc:
+                st.error(f"WebMO connection failed: {exc}")
+            else:
+                st.success("Authenticated successfully.")
+
+    connection = (webmo_url.rstrip("/"), webmo_username.strip())
+    if st.session_state.get("webmo_connection") == connection:
+        st.write("Engines enabled for this account:")
+        st.json(st.session_state.get("webmo_engines", []), expanded=False)
+
+    st.markdown("**Minimal REST submission test**")
+    st.caption(
+        "This submits a two-hydrogen, HF/STO-3G single-point calculation. "
+        "It is deliberately tiny, but it creates and runs a real WebMO job."
+    )
+    if st.button(
+        "Submit tiny H₂ test job",
+        disabled=not (credentials_ready and engine),
+        type="secondary",
+    ):
+        h2_input = """# HF/STO-3G SP
+
+H2 REST submission test
+
+0 1
+H  0.000000  0.000000  0.000000
+H  0.000000  0.000000  0.740000
+
+"""
+        with st.spinner("Submitting the test job..."):
+            try:
+                rest = WebMOREST(
+                    webmo_url.rstrip("/"), webmo_username.strip(), webmo_password
+                )
+                job_number = rest.submit_job(
+                    "H2 REST submission test", h2_input, engine
+                )
+                job_info = rest.get_job_info(job_number)
+            except Exception as exc:
+                st.error(f"WebMO submission failed: {exc}")
+            else:
+                st.session_state["webmo_last_job"] = job_number
+                st.success(f"Submitted WebMO job {job_number}.")
+                st.json(job_info, expanded=False)
+
+    if current_mol3d is not None:
+        st.markdown("**Submit the current oligomer**")
+        st.warning(
+            "Quantum calculations can be expensive for long oligomers. Review the "
+            "route section and begin with a low-cost method."
+        )
+        job_name = st.text_input("Job name", f"oligomer_{len(seq)}mer")
+        route = st.text_input(
+            "Gaussian route section",
+            "# PM6 SP",
+            help="For example: # PM6 Opt or # B3LYP/6-31G(d) SP",
+        )
+        wo1, wo2, wo3 = st.columns(3)
+        with wo1:
+            charge = st.number_input("Charge", value=0, step=1)
+        with wo2:
+            multiplicity = st.number_input("Multiplicity", 1, 20, 1)
+        with wo3:
+            processors = st.number_input("Processors", 1, 64, 1)
+
+        try:
+            gaussian_input = olig.to_gaussian_input(
+                current_mol3d,
+                route=route,
+                title=job_name,
+                charge=int(charge),
+                multiplicity=int(multiplicity),
+            )
+        except ValueError as exc:
+            st.error(str(exc))
+            gaussian_input = None
+
+        if gaussian_input and st.checkbox("Preview Gaussian input"):
+            st.code(gaussian_input, language=None)
+
+        if st.button(
+            "Submit current oligomer to WebMO",
+            disabled=not (credentials_ready and engine and gaussian_input),
+            type="primary",
+        ):
+            with st.spinner("Submitting oligomer to WebMO..."):
+                try:
+                    rest = WebMOREST(
+                        webmo_url.rstrip("/"), webmo_username.strip(), webmo_password
+                    )
+                    job_number = rest.submit_job(
+                        job_name,
+                        gaussian_input,
+                        engine,
+                        ppn=int(processors),
+                    )
+                    job_info = rest.get_job_info(job_number)
+                except Exception as exc:
+                    st.error(f"WebMO submission failed: {exc}")
+                else:
+                    st.session_state["webmo_last_job"] = job_number
+                    st.success(f"Submitted WebMO job {job_number}.")
+                    st.json(job_info, expanded=False)
