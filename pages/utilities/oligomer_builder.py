@@ -1,4 +1,6 @@
 """Oligomer Builder - draw a monomer, build and optimize oligomers."""
+import re
+
 import streamlit as st
 import streamlit.components.v1 as components
 from webmo import WebMOREST
@@ -108,6 +110,12 @@ def _optimize(smiles: str, n_conf: int, planar: bool):
     return olig.Chem.MolToMolBlock(mol3d), energies
 
 
+def _safe_name(text: str, default: str = "oligomer") -> str:
+    """Turn user text into a filename-safe prefix."""
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", text.strip()).strip("._-")
+    return cleaned or default
+
+
 try:
     mono_smiles = tuple((L, m.smiles) for L, m in monomers.items())
     oligo_smiles = _build(mono_smiles, seq)
@@ -169,7 +177,15 @@ if res and res[0] == oligo_smiles:
     view.zoomTo()
     components.html(view._make_html(), height=470, width=920)
 
-    name = f"oligomer_{len(seq)}mer"
+    p1, p2 = st.columns([1, 2])
+    with p1:
+        prefix = st.text_input(
+            "File name prefix", "oligomer", key="olig_prefix",
+            help="Downloaded files are named <prefix>_<n>mer.<ext>.",
+        )
+    name = f"{_safe_name(prefix)}_{len(seq)}mer"
+    with p2:
+        st.caption(f"Files: `{name}.xyz`, `{name}.mol`, `{name}.pdb`")
     d1, d2, d3 = st.columns(3)
     d1.download_button("Download .xyz", olig.to_xyz(mol3d), f"{name}.xyz")
     d2.download_button("Download .mol (SDF)", molblock, f"{name}.mol")
@@ -268,7 +284,7 @@ H  0.000000  0.000000  0.740000
             "Quantum calculations can be expensive for long oligomers. Review the "
             "route section and begin with a low-cost method."
         )
-        job_name = st.text_input("Job name", f"oligomer_{len(seq)}mer")
+        job_name = st.text_input("Job name", name)
         route = st.text_input(
             "Gaussian route section",
             "# PM6 SP",
