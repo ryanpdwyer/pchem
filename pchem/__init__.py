@@ -204,17 +204,14 @@ def getprop_dens(gas, prop, density, T=298.15):
 
 
     
-def getPressure(gas, T=300, Vbar=22.4, threshold=1e-4):
-    """Get the pressure of a gas at a given temperature and molar volume."""
-    Z_prev = 1
-    Pguess = (0.083145*T)/Vbar * Z_prev
-    Z_guess = getprop(gas, 'Z', Pguess, T)
-    while abs(Z_guess-Z_prev) > threshold:
-        Z_prev=Z_guess
-        Pguess = Pguess*Z_guess
-        Z_guess = getprop(gas, 'Z', Pguess, T)
-        
-    return Pguess*Z_guess
+def getPressure(gas, T=300, Vbar=22.4):
+    """Get the pressure (bar) of a gas at a given temperature T (K) and
+    molar volume Vbar (L/mol).
+
+    Uses CoolProp's (T, Dmolar) flash directly, so the returned pressure
+    satisfies Vbar = Z R T / P exactly (to CoolProp's precision).
+    """
+    return getprop(gas, 'P', T=T, Dmolar=1000/Vbar) / 1e5  # Pa -> bar
 
 
 # From StackOverflow
