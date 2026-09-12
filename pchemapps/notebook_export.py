@@ -5,6 +5,7 @@ Supports both .ipynb format and percent-script .py format (compatible with
 VS Code, Spyder, and JupyterLab).
 """
 import json
+import pprint
 import io
 import base64
 import streamlit as st
@@ -148,7 +149,7 @@ df.head()'''
     })
 
     # Settings cell
-    settings_str = json.dumps(settings, indent=2)
+    settings_str = pprint.pformat(settings, indent=2, width=80)
     cells.append({
         'type': 'markdown',
         'source': "## Analysis Settings\n\nThese are the settings used in the Streamlit app:"
@@ -297,6 +298,7 @@ def generate_echem_notebook(
     x_column: str,
     y_column: str,
     title: str = "Electrochemistry Data Analysis",
+    peaks: list[pd.DataFrame] | None = None,
 ) -> list[dict]:
     """
     Generate notebook cells for electrochemistry data with multiple traces.
@@ -357,7 +359,7 @@ import plotly.graph_objects as go"""
     })
 
     # Settings cell
-    settings_str = json.dumps(settings, indent=2)
+    settings_str = pprint.pformat(settings, indent=2, width=80)
     cells.append({
         'type': 'markdown',
         'source': "## Analysis Settings\n\nThese are the settings used in the Streamlit app:"
@@ -380,17 +382,41 @@ labels = {labels}'''
         'source': "## Plot with Matplotlib"
     })
 
+    # Peak annotations chosen in the app: label -> [(x, text), ...]
+    peak_dict = {}
+    if peaks is not None:
+        for df, label in zip(peaks, labels):
+            if df is not None and len(df):
+                peak_dict[label] = [(round(float(x), 1), str(t)) for x, t in zip(df[x_column], df["Label"])]
+    peaks_src = pprint.pformat(peak_dict, indent=4, width=100) if peak_dict else "{}"
+    fontsize = settings.get("peak_label_fontsize", 9)
     cells.append({
         'type': 'code',
-        'source': '''fig, ax = plt.subplots(figsize=(10, 6))
+        'source': f'''# --- Plot settings ---
+annot_fontsize = {fontsize}       # size of the peak labels
+line_width = 1.8
 
-for df, label in zip(datasets, labels):
-    ax.plot(df[x_column].values, df[y_column].values, label=label)
+# Peak annotations: label -> list of (x, text). Edit freely.
+peaks = {peaks_src}
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+for i, (df, label) in enumerate(zip(datasets, labels)):
+    color = f"C{{i}}"
+    ax.plot(df[x_column].values, df[y_column].values, label=label, color=color, lw=line_width)
+    # dashed line at each peak (no legend entry) and a label just above the axes
+    for x, text in peaks.get(label, []):
+        ax.axvline(x, color=color, ls="--", lw=0.8, alpha=0.6)
+        ax.annotate(text, (x, 1.0), xycoords=("data", "axes fraction"),
+                    xytext=(0, 3), textcoords="offset points",
+                    rotation=90, ha="center", va="bottom", fontsize=annot_fontsize, color=color)
 
 ax.set_xlabel(x_label)
 ax.set_ylabel(y_label)
+if "x_min" in settings and "x_max" in settings:
+    ax.set_xlim(settings["x_min"], settings["x_max"])
 ax.legend()
-ax.grid(True, alpha=0.3)
+ax.grid(settings.get("gridlines", True), axis="x", alpha=0.3)
 plt.tight_layout()
 plt.show()'''
     })
@@ -468,7 +494,8 @@ def add_echem_notebook_download_buttons(
     x_column: str,
     y_column: str,
     title: str = "Electrochemistry Data Analysis",
-    filename_base: str = "echem_analysis"
+    filename_base: str = "echem_analysis",
+    peaks: list[pd.DataFrame] | None = None,
 ):
     """
     Add download buttons for electrochemistry notebook export.
@@ -496,7 +523,8 @@ def add_echem_notebook_download_buttons(
         y_label=y_label,
         x_column=x_column,
         y_column=y_column,
-        title=title
+        title=title,
+        peaks=peaks,
     )
 
     col1, col2 = st.columns(2)
