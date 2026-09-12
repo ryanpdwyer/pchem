@@ -1,4 +1,4 @@
-"""Combine Raman Data"""
+"""Combine Raman / IR Data"""
 import streamlit as st
 st.page_link("pages/home.py", label="← Home")
 

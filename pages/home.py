@@ -136,7 +136,7 @@ with col2:
         </div>
         <ul class="tool-list">
             <li><a href="/combine-uvvis">Combine UV-Vis</a> <span class="tool-desc">Merge spectra</span></li>
-            <li><a href="/combine-raman">Combine Raman</a> <span class="tool-desc">Merge Raman data</span></li>
+            <li><a href="/combine-raman">Combine Raman / IR</a> <span class="tool-desc">Overlay Raman (ENLIGHTEN) and Nicolet IR (.spa) data</span></li>
             <li><a href="/combine-echem">Combine Electrochem</a> <span class="tool-desc">Merge electrochemistry</span></li>
             <li><a href="/echem-peaks">Peak Picking</a> <span class="tool-desc">Peak analysis</span></li>
             <li><a href="/plot-excel">Plot Excel</a> <span class="tool-desc">Absorbance data</span></li>

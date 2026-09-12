@@ -2,6 +2,7 @@
 import streamlit as st
 import base64
 import pandas as pd
+import struct
 import numpy as np
 import io
 import zipfile
@@ -35,7 +36,7 @@ def limit_x_values(data, x_column, settings, step=None):
     settings['x_max'] = x_max
     data_out = []
     for df in data:
-        mask = (df[x_column].values > x_min) * (df[x_column].values < x_max)
+        mask = (df[x_column].values >= x_min) & (df[x_column].values <= x_max)
         data_out.append(df[mask])
     return data_out, settings
 
@@ -129,6 +130,7 @@ def process_file(f, skiprows=0):
 
 
 class Enlighten_Data:
+    kind = "Enlighten Raman"
     
     def __init__(self, f):
         fh = StringIO(f.getvalue().decode("utf-8"))
@@ -162,12 +164,114 @@ class Enlighten_Data:
 
 
 
+def read_spa(raw):
+    """Parse a Thermo/Nicolet OMNIC .SPA binary file.
+
+    Returns (df, header). ``df`` has two columns, x (ascending) and y, named
+    from the unit codes in the file. ``header`` holds the title and raw
+    layout/unit info.
+    """
+    if isinstance(raw, str):
+        raw = raw.encode("latin-1")
+    if not raw.startswith(b"Spectral Data File"):
+        raise ValueError("Not an OMNIC .SPA file (missing 'Spectral Data File' signature)")
+    if len(raw) < 304:
+        raise ValueError("OMNIC .SPA file is truncated before the key table")
+    title = raw[30:30 + 256].split(b"\x00", 1)[0].decode("latin-1", errors="replace").strip()
+
+    # Directory of 16-byte entries starting at byte 304:
+    #   uint8 key, one unused byte, uint32 offset, uint32 length, 6 unused bytes
+    # key 2 -> spectrum header, key 3 -> float32 intensities
+    nlines = struct.unpack_from("<H", raw, 294)[0]
+    if nlines == 0 or 304 + 16 * nlines > len(raw):
+        raise ValueError("OMNIC .SPA file has an invalid key table")
+    entries = []
+    for i in range(nlines):
+        pos = 304 + 16 * i
+        key = struct.unpack_from("<B", raw, pos)[0]
+        offset, length = struct.unpack_from("<II", raw, pos + 2)
+        entries.append((key, offset, length))
+
+    headers = [entry for entry in entries if entry[0] == 2]
+    payloads = [entry for entry in entries if entry[0] == 3]
+    if not headers or not payloads:
+        raise ValueError("OMNIC .SPA file: could not locate spectrum header or data block")
+    if len(headers) != 1 or len(payloads) != 1:
+        raise ValueError("OMNIC file contains multiple spectra; grouped spectra are not supported")
+    _, hdr_pos, hdr_len = headers[0]
+    _, data_pos, data_len = payloads[0]
+    if hdr_pos + 24 > len(raw) or hdr_len < 24:
+        raise ValueError("OMNIC .SPA file has an invalid spectrum header")
+
+    nx = struct.unpack_from("<I", raw, hdr_pos + 4)[0]
+    xunits = struct.unpack_from("<B", raw, hdr_pos + 8)[0]
+    yunits = struct.unpack_from("<B", raw, hdr_pos + 12)[0]
+    firstx, lastx = struct.unpack_from("<ff", raw, hdr_pos + 16)
+    if nx == 0 or data_len < nx * 4 or data_pos + nx * 4 > len(raw):
+        raise ValueError("OMNIC .SPA file has an invalid or truncated intensity block")
+    if not np.isfinite(firstx) or not np.isfinite(lastx):
+        raise ValueError("OMNIC .SPA file has invalid x-axis endpoints")
+
+    y = np.frombuffer(raw, dtype="<f4", count=nx, offset=data_pos).astype(float)
+    x = np.linspace(firstx, lastx, nx)
+    if x[0] > x[-1]:
+        x, y = x[::-1], y[::-1]
+
+    xname = {1: "Wavenumber (cm-1)", 2: "Data point", 3: "Wavelength (nm)",
+             4: "Wavelength (um)", 32: "Raman shift (cm-1)"}.get(
+        xunits, f"x (OMNIC units {xunits})")
+    yname = {11: "Reflectance (%)", 12: "Log(1/R)", 15: "Single beam",
+             16: "Transmittance (%)", 17: "Absorbance", 20: "Kubelka-Munk",
+             21: "Reflectance", 22: "Detector signal (V)", 26: "Photoacoustic",
+             31: "Raman intensity"}.get(yunits, f"Intensity (OMNIC units {yunits})")
+    header = {"Title": title, "Points": nx, "First x": firstx, "Last x": lastx,
+              "xunits": xunits, "yunits": yunits}
+    return pd.DataFrame({xname: x, yname: y}), header
+
+
+class SPA_Data:
+    """Thermo/Nicolet OMNIC .SPA file, with the same .df/.header interface as Enlighten_Data."""
+    kind = "OMNIC IR"
+
+    def __init__(self, f):
+        raw = f.getvalue() if hasattr(f, "getvalue") else f.read()
+        self.df, self.header = read_spa(raw)
+        self.important = {"Title": self.header["Title"], "Points": self.header["Points"]}
+
+
+class OMNIC_CSV_Data:
+    """Two-column, headerless CSV exported from OMNIC (x, y)."""
+    kind = "OMNIC IR"
+
+    def __init__(self, f):
+        df = pd.read_csv(StringIO(_decode(f)), header=None)
+        if df.shape[1] != 2:
+            raise ValueError(f"Expected 2 columns in OMNIC CSV export, got {df.shape[1]}")
+        df.columns = ["Wavenumber (cm-1)", "Intensity"]
+        df = df.sort_values("Wavenumber (cm-1)").reset_index(drop=True)
+        self.df = df
+        self.header = {"Title": f.name}
+        self.important = {"Title": f.name}
+
 
 def process_raman(f):
-    if f.name.endswith("csv"):
-        return Enlighten_Data(f)
-    else:
-        raise NotImplementedError(f"Data loading not supported for file {f.name}")
+    """Load a Raman/IR file for the combine tool.
+
+    - Wasatch ENLIGHTEN .csv  -> Enlighten_Data  (kind "Enlighten Raman")
+    - OMNIC .spa               -> SPA_Data        (kind "OMNIC IR")
+    - OMNIC 2-column .csv      -> OMNIC_CSV_Data  (kind "OMNIC IR")
+    """
+    name = f.name.lower()
+    if name.endswith(".spa"):
+        return SPA_Data(f)
+    if name.endswith(".csv"):
+        head = _decode(f)[:4000]
+        if "Laser Power" in head or "Measurement ID" in head:
+            return Enlighten_Data(f)
+        return OMNIC_CSV_Data(f)
+    raise NotImplementedError(f"Data loading not supported for file {f.name}")
+
+
 
 
 
@@ -182,4 +286,3 @@ def write_excel(df, filename, label="Download Excel file"):
     b64 = base64.b64encode(towrite.read()).decode()  # some strings
     linko = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}.xlsx">{label}</a>'
     st.markdown(linko, unsafe_allow_html=True)
-

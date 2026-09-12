@@ -31,7 +31,7 @@ all_pages = [
     st.Page("pages/quantum/variational_linear.py", title="Linear Variational", url_path="variational-linear"),
     # Data Analysis
     st.Page("pages/data_analysis/combine_uvvis.py", title="Combine UV-Vis", url_path="combine-uvvis"),
-    st.Page("pages/data_analysis/combine_raman.py", title="Combine Raman", url_path="combine-raman"),
+    st.Page("pages/data_analysis/combine_raman.py", title="Combine Raman / IR", url_path="combine-raman"),
     st.Page("pages/data_analysis/combine_echem.py", title="Combine Electrochem", url_path="combine-echem"),
     st.Page("pages/data_analysis/echem_peaks.py", title="Peak Picking", url_path="echem-peaks"),
     st.Page("pages/data_analysis/plot_excel.py", title="Plot Excel", url_path="plot-excel"),
