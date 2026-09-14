@@ -102,6 +102,17 @@ pytest tests/ -v
 
 CI/CD via GitHub Actions runs tests on every push.
 
+## BioTek ABTS page (`/biotek-abts`)
+
+`pchemapps/biotek_to_excel.py` (Gen5 parser) and `pchemapps/biotek_to_excel_v2.py`
+(combiner) are **mirrors of the canonical copies in
+`~/Dropbox/dwyer-research/2605/`**; the only edit is the package import in v2.
+Fix bugs there first, then re-copy. `pchemapps/biotek_abts.py` is the Streamlit
+front end (upload .txt files, editable plate map, Excel download, plotly
+charts). Tests: `tests/test_biotek_to_excel*.py`. Headless check: monkeypatch
+`st.file_uploader` in a wrapper script and drive it with
+`streamlit.testing.v1.AppTest` (page_link fails outside `st.navigation`).
+
 ## Modernization
 
 This project is undergoing modernization to use Streamlit's multi-page architecture. See `MODERNIZATION_PLAN.md` for the full plan.

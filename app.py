@@ -36,6 +36,7 @@ all_pages = [
     st.Page("pages/data_analysis/echem_peaks.py", title="Peak Picking", url_path="echem-peaks"),
     st.Page("pages/data_analysis/plot_excel.py", title="Plot Excel", url_path="plot-excel"),
     st.Page("pages/data_analysis/plot_solartron.py", title="Plot Solartron", url_path="plot-solartron"),
+    st.Page("pages/data_analysis/biotek_abts.py", title="BioTek ABTS", url_path="biotek-abts"),
     # Electrochemistry
     st.Page("pages/electrochemistry/impedance.py", title="Impedance", url_path="impedance"),
     # AI Tools

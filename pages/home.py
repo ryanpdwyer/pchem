@@ -141,6 +141,7 @@ with col2:
             <li><a href="/echem-peaks">Peak Picking</a> <span class="tool-desc">Peak analysis</span></li>
             <li><a href="/plot-excel">Plot Excel</a> <span class="tool-desc">Absorbance data</span></li>
             <li><a href="/plot-solartron">Plot Solartron</a> <span class="tool-desc">Solartron data</span></li>
+            <li><a href="/biotek-abts">BioTek ABTS</a> <span class="tool-desc">Gen5 plate-reader exports → one Excel workbook</span></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
