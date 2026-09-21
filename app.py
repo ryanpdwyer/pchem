@@ -22,6 +22,7 @@ all_pages = [
     st.Page("pages/thermodynamics/first_law.py", title="1st Law", url_path="first-law"),
     st.Page("pages/thermodynamics/calorimeter.py", title="2nd Law Calorimeter", url_path="calorimeter"),
     st.Page("pages/thermodynamics/mystery_gas.py", title="Mystery Gas", url_path="mystery-gas"),
+    st.Page("pages/thermodynamics/mystery_gas_b.py", title="Mystery Gas B", url_path="mystery-gas-b"),
     st.Page("pages/thermodynamics/equilibrium.py", title="Where is Equilibrium?", url_path="equilibrium"),
     st.Page("pages/thermodynamics/boltzmann_dollars.py", title="Boltzmann Dollar Game", url_path="boltzmann-dollars"),
     st.Page("pages/thermodynamics/dollar_reaction.py", title="Dollar Game: L ⇌ R", url_path="dollar-reaction"),
