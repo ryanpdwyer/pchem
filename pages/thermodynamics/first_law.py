@@ -87,13 +87,35 @@ def draw(current, container):
     return fig, ax
 
 
+def draw_thermometer(Tsys):
+    fig, ax = plt.subplots(figsize=(2, 4))
+    ax.axis('off')
+
+    x0, w = 0.45, 0.2
+    T_fill = float(np.clip(Tsys, 0.0, 100.0))
+    ax.add_patch(patches.Rectangle((x0, 0), w, T_fill, fc="#d62728", ec="none"))
+    ax.add_patch(patches.Rectangle((x0, 0), w, 100, fc="none", ec="0", linewidth=1))
+
+    for tick in range(0, 101, 10):
+        major = tick % 20 == 0
+        ax.add_line(lines.Line2D([x0 - (0.08 if major else 0.04), x0], [tick, tick], color="0", linewidth=0.75))
+        if major:
+            ax.text(x0 - 0.11, tick, f"{tick}", ha="right", va="center", fontdict=dict(size=8))
+
+    ax.text(x0 + w/2, 103, f"{Tsys:.2f} °C", ha="center", va="bottom", fontdict=dict(size=9))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-37.5, 112.5)  # maps 0-100 °C onto the water (y = 0.1-0.9) in draw()
+
+    return fig, ax
+
+
 dt = 2.0
 
 
 def simulate(Tsys, Tsurr, current, work, container):
     c = container
     work += current**2 * dt
-    cp = 18.01 * cP_water(Tsys)
+    cp = 18.01 * cP_water(np.clip(Tsys, 0.0, 100.0))
     Tsys = Tsys + (current**2 * dt - c*(Tsys-Tsurr)*dt)/cp
     return work, Tsys
 
@@ -126,7 +148,20 @@ if 'container' not in st.session_state:
 if 'data' not in st.session_state:
     st.session_state.data = copy.copy(data_default)
 
-Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.data["Tsys"][-1]), max_value=100.0, min_value=0.0, step=0.1)
+
+
+def set_Tsys(key):
+    st.session_state.data["Tsys"][-1] = st.session_state[key]
+
+
+# Slider and box both follow the simulation; either one sets the system temperature
+Tsys_widget = float(np.clip(st.session_state.data["Tsys"][-1], 0.0, 100.0))
+st.session_state.Tsys_slider = Tsys_widget
+st.session_state.Tsys_box = Tsys_widget
+Tsys = st.sidebar.slider("System temperature (°C)", max_value=100.0, min_value=0.0, step=0.1,
+                         key="Tsys_slider", on_change=set_Tsys, args=("Tsys_slider",))
+st.sidebar.number_input("Exact system temperature (°C)", max_value=100.0, min_value=0.0, step=0.1, format="%.2f",
+                        key="Tsys_box", on_change=set_Tsys, args=("Tsys_box",))
 Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=20.0, max_value=100.0, min_value=0.0, step=0.1)
 current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=5.0, step=0.01)
 container = st.sidebar.selectbox("System walls:", containers_list)
@@ -138,9 +173,6 @@ start_stop_sim = st.sidebar.button(f"{button_text} simulation")
 
 if start_stop_sim:
     st.session_state.running = not st.session_state.running
-    if st.session_state.running:  # Reset temperature...
-        st.session_state.data["Tsys"][-1] = Tsys
-
     st.rerun()
 
 reset_simulation = st.sidebar.button("Reset simulation")
@@ -170,6 +202,9 @@ fig, ax = draw(current, container)
 col1, col2 = st.columns([2, 1])
 with col1:
     st.pyplot(fig, use_container_width=True)
+with col2:
+    fig_T, ax_T = draw_thermometer(Tsys)
+    st.pyplot(fig_T, use_container_width=True)
 
 show_data = st.checkbox(label="Show data")
 

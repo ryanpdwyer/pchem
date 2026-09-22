@@ -68,8 +68,9 @@ def draw(current, container):
 
 
 Volume = 0.25
-FLUID = 'Propane'  # mass slider capped at 2 g so the gas never condenses (0-100 °C)
+FLUID = 'Propane'  # mass slider capped at 2 g so the gas never condenses (T >= 0 °C)
 dt = 2.0
+T_MAX = 300.0  # °C; slider/box limit (CoolProp's propane model is valid to ~377 °C)
 
 
 def Pressure_bar(m_gas, T_Celsius):
@@ -117,7 +118,20 @@ if 'thermGasBData' not in st.session_state:
     st.session_state.thermGasBData = copy.deepcopy(data_default)
 
 m_gas = st.sidebar.slider("Mass (g) of gas: ", value=float(st.session_state.thermGasBData["m"][-1]), max_value=2.0, min_value=0.05, step=0.05)
-Tsys = st.sidebar.slider("System temperature (°C)", value=float(st.session_state.thermGasBData["Tsys"][-1]), max_value=100.0, min_value=0.0, step=0.1)
+
+
+def set_Tsys(key):
+    st.session_state.thermGasBData["Tsys"][-1] = st.session_state[key]
+
+
+# Slider and box both follow the simulation; either one sets the system temperature
+Tsys_widget = float(np.clip(st.session_state.thermGasBData["Tsys"][-1], 0.0, T_MAX))
+st.session_state.TsysB_slider = Tsys_widget
+st.session_state.TsysB_box = Tsys_widget
+Tsys = st.sidebar.slider("System temperature (°C)", max_value=T_MAX, min_value=0.0, step=0.1,
+                         key="TsysB_slider", on_change=set_Tsys, args=("TsysB_slider",))
+st.sidebar.number_input("Exact system temperature (°C)", max_value=T_MAX, min_value=0.0, step=0.1, format="%.2f",
+                        key="TsysB_box", on_change=set_Tsys, args=("TsysB_box",))
 Tsurr = st.sidebar.slider("Surroundings temperature (°C)", value=20.0, max_value=100.0, min_value=0.0, step=0.1)
 current = st.sidebar.slider("Current (A)", value=0.0, min_value=0.0, max_value=2.5, step=0.01)
 container = st.sidebar.selectbox("System walls:", containers_list)
@@ -129,9 +143,6 @@ start_stop_sim = st.sidebar.button(f"{button_text} simulation")
 
 if start_stop_sim:
     st.session_state.runningB = not st.session_state.runningB
-    if st.session_state.runningB:
-        st.session_state.thermGasBData["Tsys"][-1] = Tsys
-
     st.rerun()
 
 reset_simulation = st.sidebar.button("Reset simulation")
