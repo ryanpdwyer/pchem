@@ -396,18 +396,6 @@ LADDERS = [
                 "explain": r"$\overline{S} = S^\circ - R\ln(P/1\ \text{bar}) = 205.2 - 8.314\ln(0.21) = 205.2 + 13.0 = 218.2$ J mol$^{-1}$ K$^{-1}$. Lower pressure means more volume per molecule, so higher entropy.",
             },
             {
-                "id": "mol-05",
-                "prompt": r"A solid X dissolves in water: X(s) → X(aq), with $Q_\text{rxn} = [\text{X}]/(1\ \text{M})$. A saturated solution has [X] = 0.050 M. A seed crystal of X is dropped into a **supersaturated** solution with [X] = 0.080 M. What happens?",
-                "choices": [
-                    r"More X dissolves: dissolving always increases entropy",
-                    r"X crystallizes out: above 0.050 M, $-R\ln Q_\text{rxn}$ is too small, so dissolving lowers the entropy of the universe and crystallizing raises it",
-                    r"Nothing: the solution already contains dissolved X",
-                    r"X crystallizes out because the solid always has lower entropy",
-                ],
-                "answer": 1,
-                "explain": r"For dissolving, $\Delta S_\text{universe} = \Delta_\text{r}S^\circ - R\ln Q_\text{rxn} - \Delta_\text{r}H/T$. Only the $-R\ln Q_\text{rxn}$ term depends on [X]. A saturated solution is at equilibrium: $\Delta S_\text{universe} = 0$ at [X] = 0.050 M. Below 0.050 M (pure water: $Q_\text{rxn} \to 0$, $-R\ln Q_\text{rxn}$ large) X dissolves. Above 0.050 M, $\Delta S_\text{universe} < 0$ for dissolving, so the reverse, crystallizing, happens until [X] falls back to 0.050 M.",
-            },
-            {
                 "id": "mol-06",
                 "prompt": r"L-alanine(aq) ⇌ D-alanine(aq) has $\Delta_\text{r}H = 0$ and $\Delta_\text{r}S^\circ = 0$. Starting from pure L, why does the reaction stop at 50% L, 50% D?",
                 "choices": [
@@ -453,7 +441,6 @@ SHEET_REFS = {
     "mol-03": ["particle_box", "S_pressure"],
     "mol-02": ["q_trans_rot", "rigid_rotor_B"],
     "mol-04": ["S_pressure"],
-    "mol-05": ["S_rxn_Q"],
     "mol-06": ["S_rxn_Q"],
 }
 
@@ -491,7 +478,6 @@ FOLLOW_UP = {
     "mol-02": "H&G 7.7",
     "mol-03": "H&G 8.1; M&S 6-28",
     "mol-04": "A6: N2/O2 mixture; SO2 at 0.010 bar",
-    "mol-05": "H&G 8.9; M&S 6-30, 6-38",
     "mol-06": "H&G 8.9; M&S 6-28, 6-30",
 }
 
