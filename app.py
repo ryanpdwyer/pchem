@@ -27,6 +27,7 @@ all_pages = [
     st.Page("pages/thermodynamics/boltzmann_dollars.py", title="Boltzmann Dollar Game", url_path="boltzmann-dollars"),
     st.Page("pages/thermodynamics/dollar_reaction.py", title="Dollar Game: L ⇌ R", url_path="dollar-reaction"),
     st.Page("pages/thermodynamics/compressibility.py", title="Compressibility Factor", url_path="compressibility"),
+    st.Page("pages/thermodynamics/exam2_practice.py", title="Exam 2 Practice", url_path="exam2-practice"),
     # Quantum
     st.Page("pages/quantum/variational_gaussian.py", title="Variational Gaussian", url_path="variational-gaussian"),
     st.Page("pages/quantum/variational_linear.py", title="Linear Variational", url_path="variational-linear"),
