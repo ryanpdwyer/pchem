@@ -138,9 +138,16 @@ def run():
     st.subheader('Phase and reference')
     st.caption(
         'Phase is automatic; add corrections in degrees if a peak still looks dispersive. '
-        'To reference: hover over a known peak in the plot, type the δ the plot shows in '
-        '**Observed δ** and the literature value in **True δ** (e.g. CHCl₃ 7.26, HOD 4.79). '
-        'Until then the axis uses the instrument offset and is only approximate.')
+        'Without a reference the ppm axis uses the instrument offset and is only approximate.')
+    c1, c2, c3, c4 = st.columns(4)
+    ref_tallest = c1.checkbox('Set tallest peak to a fixed δ', value=False)
+    ref_ppm = c2.number_input('Tallest peak δ (ppm)', value=7.26, step=0.01, format='%.3f',
+                              disabled=not ref_tallest)
+    win_hi = c3.number_input('Search from (unreferenced ppm, high)', value=20.0, disabled=not ref_tallest)
+    win_lo = c4.number_input('to (low)', value=-20.0, disabled=not ref_tallest)
+    st.caption('Each file is shifted so its tallest peak (inside the search window, on the unreferenced '
+               'axis) sits at that δ. To reference a file by a different peak instead, fill in '
+               '**Observed δ** (what the plot shows) and **True δ** in its row; that overrides the tallest-peak rule.')
     settings = pd.DataFrame({
         'File': [n for n, _ in loaded],
         'Label': [n.replace('_H1_1D', '') for n, _ in loaded],
@@ -163,6 +170,11 @@ def run():
         obs, true = opt['Observed δ (ppm)'], opt['True δ (ppm)']
         if pd.notna(obs) and pd.notna(true):
             ppm = ppm + (true - obs)
+        elif ref_tallest:
+            m = (ppm >= min(win_lo, win_hi)) & (ppm <= max(win_lo, win_hi))
+            if m.any():
+                i = np.where(m)[0][np.argmax(y[m])]
+                ppm = ppm + (ref_ppm - ppm[i])
         spectra.append(dict(name=name, label=str(opt['Label'] or name), ppm=ppm, y=y, s=s))
 
     # --- peak picking -----------------------------------------------------------------
