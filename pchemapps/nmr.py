@@ -142,12 +142,12 @@ def run():
     st.subheader('Reference (peak registration)')
     st.caption(
         'The magnet has no lock, so every spectrum drifts. Pick a lone peak that is in every file '
-        '(HOD in D₂O 4.76, CHCl₃ 7.26, TMS 0). In each file the tallest point inside the search window '
+        '(HOD in D₂O 4.79, CHCl₃ 7.26, TMS 0). In each file the tallest point inside the search window '
         '(on the unreferenced axis, checked with the plot below) is set to that δ. For multi-FID files '
         'that are summed, each FID is first shifted onto that peak. Same method as L6 (`reference` + `align`).')
     c1, c2, c3, c4 = st.columns(4)
     register = c1.checkbox('Register to a peak', value=True)
-    ref_ppm = c2.number_input('Peak δ (ppm)', value=4.76, step=0.01, format='%.3f', disabled=not register)
+    ref_ppm = c2.number_input('Peak δ (ppm)', value=4.79, step=0.01, format='%.3f', disabled=not register)
     win_hi = c3.number_input('Search window, high (unreferenced ppm)', value=6.5, step=0.1, disabled=not register)
     win_lo = c4.number_input('Search window, low', value=5.0, step=0.1, disabled=not register)
     win = (min(win_lo, win_hi), max(win_lo, win_hi)) if register else None
