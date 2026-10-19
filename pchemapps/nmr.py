@@ -73,15 +73,40 @@ def autophase(spec: np.ndarray):
     return float((p0 + 180) % 360 - 180), float(p1)
 
 
+def peak_index(y, ppm, lo, hi):
+    """Index of the tallest point of y between lo and hi ppm (as in L6 l6nmr.peak_index)."""
+    idx = np.where((ppm >= min(lo, hi)) & (ppm <= max(lo, hi)))[0]
+    if idx.size == 0:
+        return None
+    return idx[np.argmax(y[idx])]
+
+
 @st.cache_data(show_spinner=False)
-def process(raw: bytes, lb: float, row: str):
-    """Read, choose/sum FIDs, FFT and auto-phase. Cached on the file bytes and settings."""
+def process(raw: bytes, lb: float, row: str, win=None):
+    """Read, FFT, optionally align and sum FIDs, auto-phase. Cached on the file bytes and settings.
+
+    row: FID index as a string, or 'sum'. When summing with a search window win=(lo, hi) on the
+    unreferenced ppm axis, every FID is first shifted by whole points so its tallest magnitude
+    peak in win lines up with the first FID's (the L6 drift removal, l6nmr.align).
+    """
     r = read_nuts(raw)
-    fid = r['fid'].sum(axis=0) if row == 'sum' else r['fid'][int(row)]
-    spec = fft_spectrum(fid, r['sw'], lb)
+    n = r['fid'].shape[1]
+    hz = hz_axis(n, r['sw'])
+    raw_ppm = (hz + r['offset']) / r['sf']
+    rows = range(r['fid'].shape[0]) if row == 'sum' else [int(row)]
+    specs = [fft_spectrum(r['fid'][i], r['sw'], lb) for i in rows]
+    drift_hz = []
+    if row == 'sum' and win is not None:
+        target = peak_index(np.abs(specs[0]), raw_ppm, *win)
+        if target is not None:
+            for k, sp in enumerate(specs):
+                shift = target - peak_index(np.abs(sp), raw_ppm, *win)
+                specs[k] = np.roll(sp, shift)
+                drift_hz.append(shift * r['sw'] / n)
+    spec = np.sum(specs, axis=0)
     p0, p1 = autophase(spec)
-    return dict(spec=spec, hz=hz_axis(spec.size, r['sw']), sw=r['sw'], sf=r['sf'],
-                offset=r['offset'], date=r['date'], n_fid=r['fid'].shape[0], p0=p0, p1=p1)
+    return dict(spec=spec, hz=hz, raw_ppm=raw_ppm, sw=r['sw'], sf=r['sf'], offset=r['offset'],
+                date=r['date'], n_fid=r['fid'].shape[0], p0=p0, p1=p1, drift_hz=drift_hz)
 
 
 def pick_peaks(ppm, y, lo, hi, min_prom_frac, max_peaks):
@@ -114,6 +139,19 @@ def run():
     lb = c1.number_input('Line broadening (Hz)', 0.0, 10.0, 0.5, 0.1)
     normalize = c2.checkbox('Normalize each spectrum to its tallest peak', value=True)
 
+    st.subheader('Reference (peak registration)')
+    st.caption(
+        'The magnet has no lock, so every spectrum drifts. Pick a lone peak that is in every file '
+        '(HOD in D₂O 4.76, CHCl₃ 7.26, TMS 0). In each file the tallest point inside the search window '
+        '(on the unreferenced axis, checked with the plot below) is set to that δ. For multi-FID files '
+        'that are summed, each FID is first shifted onto that peak. Same method as L6 (`reference` + `align`).')
+    c1, c2, c3, c4 = st.columns(4)
+    register = c1.checkbox('Register to a peak', value=True)
+    ref_ppm = c2.number_input('Peak δ (ppm)', value=4.76, step=0.01, format='%.3f', disabled=not register)
+    win_hi = c3.number_input('Search window, high (unreferenced ppm)', value=6.5, step=0.1, disabled=not register)
+    win_lo = c4.number_input('Search window, low', value=5.0, step=0.1, disabled=not register)
+    win = (min(win_lo, win_hi), max(win_lo, win_hi)) if register else None
+
     # --- read + process ---------------------------------------------------------------
     loaded = []
     for f in files:
@@ -130,7 +168,7 @@ def run():
                                   key=f'row_{f.name}')
             row = 'sum' if choice == 'Sum of all' else str(int(choice) - 1)
         with st.spinner(f'Processing {f.name}...'):
-            loaded.append((f.name, process(raw, lb, row)))
+            loaded.append((f.name, process(raw, lb, row, win)))
     if not loaded:
         return
 
@@ -139,15 +177,8 @@ def run():
     st.caption(
         'Phase is automatic; add corrections in degrees if a peak still looks dispersive. '
         'Without a reference the ppm axis uses the instrument offset and is only approximate.')
-    c1, c2, c3, c4 = st.columns(4)
-    ref_tallest = c1.checkbox('Set tallest peak to a fixed δ', value=False)
-    ref_ppm = c2.number_input('Tallest peak δ (ppm)', value=7.26, step=0.01, format='%.3f',
-                              disabled=not ref_tallest)
-    win_hi = c3.number_input('Search from (unreferenced ppm, high)', value=20.0, disabled=not ref_tallest)
-    win_lo = c4.number_input('to (low)', value=-20.0, disabled=not ref_tallest)
-    st.caption('Each file is shifted so its tallest peak (inside the search window, on the unreferenced '
-               'axis) sits at that δ. To reference a file by a different peak instead, fill in '
-               '**Observed δ** (what the plot shows) and **True δ** in its row; that overrides the tallest-peak rule.')
+    st.caption('To reference one file by a different peak, fill in **Observed δ** (what the plot shows) '
+               'and **True δ** in its row; that overrides the registration above for that file.')
     settings = pd.DataFrame({
         'File': [n for n, _ in loaded],
         'Label': [n.replace('_H1_1D', '') for n, _ in loaded],
@@ -161,21 +192,52 @@ def run():
         column_config={'Observed δ (ppm)': st.column_config.NumberColumn(format='%.3f'),
                        'True δ (ppm)': st.column_config.NumberColumn(format='%.3f')})
 
-    spectra = []
+    spectra, reg = [], []
     for (name, s), (_, opt) in zip(loaded, settings.iterrows()):
         y = apply_phase(s['spec'], s['p0'] + (opt['p0 tweak (°)'] or 0), s['p1'] + (opt['p1 tweak (°)'] or 0))
         if normalize:
             y = y / np.max(y)
-        ppm = (s['hz'] + s['offset']) / s['sf']
+        ppm = s['raw_ppm'].copy()
         obs, true = opt['Observed δ (ppm)'], opt['True δ (ppm)']
+        found = None
         if pd.notna(obs) and pd.notna(true):
             ppm = ppm + (true - obs)
-        elif ref_tallest:
-            m = (ppm >= min(win_lo, win_hi)) & (ppm <= max(win_lo, win_hi))
-            if m.any():
-                i = np.where(m)[0][np.argmax(y[m])]
-                ppm = ppm + (ref_ppm - ppm[i])
+            how = 'manual'
+        elif win is not None:
+            i = peak_index(np.abs(s['spec']), s['raw_ppm'], *win)
+            if i is None:
+                how = 'no points in search window'
+            else:
+                found = s['raw_ppm'][i]
+                ppm = ppm + (ref_ppm - found)
+                how = 'registered'
+        else:
+            how = 'instrument offset'
+        reg.append({'File': name, 'Reference': how,
+                    'Peak found at (unreferenced ppm)': None if found is None else round(found, 3),
+                    'Shift applied (Hz)': round((ppm[0] - s['raw_ppm'][0]) * s['sf'], 1),
+                    'FID drift range (Hz)': round(np.ptp(s['drift_hz']), 1) if s['drift_hz'] else None})
         spectra.append(dict(name=name, label=str(opt['Label'] or name), ppm=ppm, y=y, s=s))
+
+    if win is not None:
+        with st.expander('Check the registration peak', expanded=False):
+            st.caption('Unreferenced magnitude spectra; the shaded band is the search window and the marker is '
+                       'the peak each file was registered to. Move the window if it caught the wrong peak.')
+            chk = go.Figure()
+            for i, ((name, s), r) in enumerate(zip(loaded, reg)):
+                mag = np.abs(s['spec']) / np.abs(s['spec']).max()
+                chk.add_trace(go.Scatter(x=s['raw_ppm'], y=mag, mode='lines', name=name,
+                                         line=dict(color=trace_color(i), width=1)))
+                if r['Peak found at (unreferenced ppm)'] is not None:
+                    j = np.argmin(abs(s['raw_ppm'] - r['Peak found at (unreferenced ppm)']))
+                    chk.add_trace(go.Scatter(x=[s['raw_ppm'][j]], y=[mag[j]], mode='markers', showlegend=False,
+                                             marker=dict(color=trace_color(i), size=9, symbol='triangle-down')))
+            chk.add_vrect(x0=win[0], x1=win[1], fillcolor='gray', opacity=0.15, line_width=0)
+            style_axes_plotly(chk)
+            chk.update_xaxes(title='unreferenced δ (ppm)', autorange='reversed')
+            chk.update_layout(height=350, hovermode='closest')
+            show_plotly(chk)
+            st.dataframe(pd.DataFrame(reg), hide_index=True)
 
     # --- peak picking -----------------------------------------------------------------
     st.subheader('Peaks')
