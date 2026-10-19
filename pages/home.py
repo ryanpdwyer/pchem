@@ -140,7 +140,7 @@ with col2:
             <li><a href="/combine-raman">Combine Raman / IR</a> <span class="tool-desc">Overlay Raman (ENLIGHTEN) and Nicolet IR (.spa) data</span></li>
             <li><a href="/combine-echem">Combine Electrochem</a> <span class="tool-desc">Merge electrochemistry</span></li>
             <li><a href="/echem-peaks">Peak Picking</a> <span class="tool-desc">Peak analysis</span></li>
-            <li><a href="/nmr-peaks">NMR Peak Picking</a> <span class="tool-desc">Anasazi EFT-90 files: FFT, phase, reference, pick peaks</span></li>
+            <li><a href="/anasazi">NMR Peak Picking</a> <span class="tool-desc">Anasazi EFT-90 files: FFT, phase, reference, pick peaks</span></li>
             <li><a href="/plot-excel">Plot Excel</a> <span class="tool-desc">Absorbance data</span></li>
             <li><a href="/plot-solartron">Plot Solartron</a> <span class="tool-desc">Solartron data</span></li>
             <li><a href="/biotek-abts">BioTek ABTS</a> <span class="tool-desc">Gen5 plate-reader exports → one Excel workbook</span></li>

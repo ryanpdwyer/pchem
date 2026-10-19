@@ -36,7 +36,7 @@ all_pages = [
     st.Page("pages/data_analysis/combine_raman.py", title="Combine Raman / IR", url_path="combine-raman"),
     st.Page("pages/data_analysis/combine_echem.py", title="Combine Electrochem", url_path="combine-echem"),
     st.Page("pages/data_analysis/echem_peaks.py", title="Peak Picking", url_path="echem-peaks"),
-    st.Page("pages/data_analysis/nmr_peaks.py", title="NMR Peak Picking", url_path="nmr-peaks"),
+    st.Page("pages/data_analysis/nmr_peaks.py", title="NMR Peak Picking", url_path="anasazi"),
     st.Page("pages/data_analysis/plot_excel.py", title="Plot Excel", url_path="plot-excel"),
     st.Page("pages/data_analysis/plot_solartron.py", title="Plot Solartron", url_path="plot-solartron"),
     st.Page("pages/data_analysis/biotek_abts.py", title="BioTek ABTS", url_path="biotek-abts"),
