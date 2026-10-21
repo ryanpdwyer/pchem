@@ -24,7 +24,23 @@ def display_levels(levels):
 </div>"""
 
 
-def display_all(left, right, ways, entropy, totals):
+def temperature(levels):
+    """T in units of (Delta epsilon)/k_B from n1/n0 = exp(-Delta epsilon/k_B T)."""
+    n0, n1 = levels
+    if n1 == 0:
+        return "0"
+    if n1 == n0:
+        return "\\infty"
+    return f"{1/np.log(n0/n1):.2f}"
+
+
+def display_temperature(col, name, levels):
+    n0, n1 = levels
+    col.markdown(f"$n_1/n_0 = {n1}/{n0} = {n1/n0:.3f}$")
+    col.markdown(f"$T_\\text{{{name}}} = {temperature(levels)}\\,\\Delta\\varepsilon/k_B$")
+
+
+def display_all(left, right, ways, entropy, totals, temps):
     cols = st.columns(2)
 
     cols[0].markdown(display_levels(left), unsafe_allow_html=True)
@@ -43,6 +59,10 @@ def display_all(left, right, ways, entropy, totals):
         cols[0].markdown(f"$S_\\text{{left}}= {S_L:.2f}k_B$")
         cols[1].markdown(f"$S_\\text{{right}}= {S_R:.2f}k_B$")
 
+    if temps:
+        display_temperature(cols[0], "left", left)
+        display_temperature(cols[1], "right", right)
+
     if totals:
         st.markdown(f"$W_\\text{{total}}=$ {int(W_L*W_R)}")
         st.markdown(f"$S_\\text{{total}}= {S_L+S_R:.2f}k_B$")
@@ -54,6 +74,7 @@ st.markdown("## Where is equilibrium?")
 showW = st.sidebar.checkbox("Show ways?")
 showS = st.sidebar.checkbox("Show entropy?")
 showTotals = st.sidebar.checkbox("Show totals?")
+showT = st.sidebar.checkbox("Show temperatures?")
 
 left0 = [10, 6]
 right0 = [26, 6]
@@ -87,4 +108,4 @@ right[0] = right0[0] - units
 right[1] = right[1] + units
 
 with container:
-    display_all(left, right, showW, showS, showTotals)
+    display_all(left, right, showW, showS, showTotals, showT)
